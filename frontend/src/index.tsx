@@ -63,11 +63,12 @@ let router = createBrowserRouter([
       },
       {
         path: "logs",
-        Component: Apps,
+        Component: React.lazy(() => import("./pages/admin/logs")),
       },
       {
         path: "settings",
-        Component: Apps,
+
+        Component: () => <h1 className="text-2xl font-semibold">Settings</h1>,
       },
     ],
   },

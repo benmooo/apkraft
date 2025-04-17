@@ -44,14 +44,14 @@ cargo loco generate scaffold app_version \
   published_at:tstz --api
 ```
 
-#### Add column(current_app_version_id) to apps table
+#### Add column(current_version_id) to apps table
 
 ```sh
-cargo loco g migration AddCurrentAppVersionIdToApps current_app_version_id:int
+cargo loco g migration AddCurrentVersionIdToApps current_version_id:int
 ```
 
-#### create foreign key for current_app_version_id in apps table
+#### create foreign key for current_version_id in apps table
 
 ```sh
-cargo loco g migration AddCurrentAppVersionIdToUsers current_app_version_id:int
+cargo loco g migration AddCurrentAppVersionIdToUsers current_version_id:int
 ```

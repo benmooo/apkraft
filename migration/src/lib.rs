@@ -7,8 +7,8 @@ mod m20250415_070650_platforms;
 mod m20250415_071137_apps;
 mod m20250415_075142_apk_files;
 mod m20250415_082441_app_versions;
-mod m20250415_101650_add_current_app_version_id_to_apps;
-mod m20250415_102251_create_fk_apps_current_app_version_id_to_app_versions;
+mod m20250415_101650_add_current_version_id_to_apps;
+mod m20250415_102251_create_fk_apps_current_version_id_to_app_versions;
 pub struct Migrator;
 
 #[async_trait::async_trait]
@@ -20,10 +20,8 @@ impl MigratorTrait for Migrator {
             Box::new(m20250415_071137_apps::Migration),
             Box::new(m20250415_075142_apk_files::Migration),
             Box::new(m20250415_082441_app_versions::Migration),
-            Box::new(m20250415_101650_add_current_app_version_id_to_apps::Migration),
-            Box::new(
-                m20250415_102251_create_fk_apps_current_app_version_id_to_app_versions::Migration,
-            ),
+            Box::new(m20250415_101650_add_current_version_id_to_apps::Migration),
+            Box::new(m20250415_102251_create_fk_apps_current_version_id_to_app_versions::Migration),
             // inject-above (do not remove this comment)
         ]
     }

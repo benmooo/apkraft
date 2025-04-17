@@ -34,11 +34,6 @@ export const routes: RouteItem[] = [
     url: "logs",
     icon: ScrollText,
   },
-  {
-    title: "设置",
-    url: "settings",
-    icon: Settings,
-  },
 ];
 
 export const withPrefix = (prefix: string) => (route: RouteItem) => ({
