@@ -1,6 +1,5 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { App } from "./App";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -8,10 +7,7 @@ import LandingPage from "./pages/landing-page";
 import AdminLayout from "./components/layouts/admin-layout";
 import Apps from "./pages/admin/apps";
 import { adminPrefix } from "./lib/config";
-import {
-  RouterErrorBoundary,
-  DefaultLoaderError,
-} from "./components/features/router-error-boundary";
+import { RouterErrorBoundary } from "./components/features/router-error-boundary";
 import Admin from "./pages/admin/admin";
 
 const root = document.getElementById("root");
@@ -54,12 +50,12 @@ let router = createBrowserRouter([
         Component: React.lazy(() => import("./pages/admin/create-app-version")),
       },
       {
-        path: "apk-files",
-        Component: React.lazy(() => import("./pages/admin/apk-files")),
+        path: "files",
+        Component: React.lazy(() => import("./pages/admin/files")),
       },
       {
-        path: "apk-files/create",
-        Component: React.lazy(() => import("./pages/admin/create-apk")),
+        path: "files/create",
+        Component: React.lazy(() => import("./pages/admin/create-file")),
       },
       {
         path: "logs",
@@ -67,7 +63,6 @@ let router = createBrowserRouter([
       },
       {
         path: "settings",
-
         Component: () => <h1 className="text-2xl font-semibold">Settings</h1>,
       },
     ],
@@ -75,6 +70,7 @@ let router = createBrowserRouter([
   // Catch-all route for 404 errors
   {
     path: "*",
+    Component: React.lazy(() => import("./pages/error/not-found")),
     ErrorBoundary: RouterErrorBoundary,
   },
 ]);

@@ -25,8 +25,8 @@ export const routes: RouteItem[] = [
     icon: Layers,
   },
   {
-    title: "APK 文件",
-    url: "apk-files",
+    title: "文件管理",
+    url: "files",
     icon: FileDown,
   },
   {

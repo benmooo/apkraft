@@ -11,6 +11,20 @@ cargo loco generate scaffold platform \
   icon_url:text --api
 ```
 
+#### File
+
+path: opendal compatiable
+
+```sh
+cargo loco generate scaffold file \
+  name:string! \
+  mime:string! \
+  size_bytes:big_int! \
+  path:string! \
+  checksum_sha256:string! \
+  description:text --api
+```
+
 #### App
 
 ```sh
@@ -18,18 +32,9 @@ cargo loco generate scaffold app \
               name:string! \
               bundle_id:string^ \
               platform:references \
-              icon_url:text \
+              icon_file_id:int \
+              current_version_id:int \
               description:text --api
-```
-
-#### APK File
-
-```sh
-cargo loco generate scaffold apk_file \
-              name:string! \
-              path:string! \
-              size_bytes:big_int! \
-              checksum_sha256:text! --api
 ```
 
 #### App version
@@ -40,18 +45,17 @@ cargo loco generate scaffold app_version \
   version_code:string! \
   version_name:string! \
   release_notes:text \
-  apk_file:references \
+  apk_file_id:int \
   published_at:tstz --api
 ```
 
-#### Add column(current_version_id) to apps table
+
+#### create foreign keys
 
 ```sh
-cargo loco g migration AddCurrentVersionIdToApps current_version_id:int
+cargo loco g migration CreateFkAppsIconFileIdToFiles
+cargo loco g migration CreateFkAppsCurrentVersionIdToAppVersions
+cargo loco g migration CreateFkAppVersionsApkFileIdToFiles
 ```
 
-#### create foreign key for current_version_id in apps table
-
-```sh
-cargo loco g migration AddCurrentAppVersionIdToUsers current_version_id:int
-```
+### sync entities

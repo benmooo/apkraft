@@ -1,6 +1,8 @@
 mod users;
 
-mod apk_files;
-mod app_versions;
-mod apps;
 mod platforms;
+
+mod files;
+
+mod apps;
+mod app_versions;

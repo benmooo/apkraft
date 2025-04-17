@@ -1,5 +1,5 @@
-pub use super::_entities::app_versions::{ActiveModel, Entity, Model};
 use sea_orm::entity::prelude::*;
+pub use super::_entities::app_versions::{ActiveModel, Model, Entity};
 pub type AppVersions = Entity;
 
 #[async_trait::async_trait]

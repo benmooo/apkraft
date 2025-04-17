@@ -14,21 +14,13 @@ pub struct Model {
     pub version_name: String,
     #[sea_orm(column_type = "Text", nullable)]
     pub release_notes: Option<String>,
+    pub apk_file_id: Option<i32>,
     pub published_at: Option<DateTimeWithTimeZone>,
     pub app_id: i32,
-    pub apk_file_id: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(
-        belongs_to = "super::apk_files::Entity",
-        from = "Column::ApkFileId",
-        to = "super::apk_files::Column::Id",
-        on_update = "Cascade",
-        on_delete = "Cascade"
-    )]
-    ApkFiles,
     #[sea_orm(
         belongs_to = "super::apps::Entity",
         from = "Column::AppId",
@@ -37,16 +29,24 @@ pub enum Relation {
         on_delete = "Cascade"
     )]
     Apps,
-}
-
-impl Related<super::apk_files::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::ApkFiles.def()
-    }
+    #[sea_orm(
+        belongs_to = "super::files::Entity",
+        from = "Column::ApkFileId",
+        to = "super::files::Column::Id",
+        on_update = "Cascade",
+        on_delete = "Cascade"
+    )]
+    Files,
 }
 
 impl Related<super::apps::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Apps.def()
+    }
+}
+
+impl Related<super::files::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Files.def()
     }
 }

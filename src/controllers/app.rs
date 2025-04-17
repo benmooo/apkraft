@@ -11,7 +11,8 @@ use crate::models::_entities::apps::{ActiveModel, Entity, Model};
 pub struct Params {
     pub name: String,
     pub bundle_id: String,
-    pub icon_url: Option<String>,
+    pub icon_file_id: Option<i32>,
+    pub current_version_id: Option<i32>,
     pub description: Option<String>,
 }
 
@@ -19,7 +20,8 @@ impl Params {
     fn update(&self, item: &mut ActiveModel) {
         item.name = Set(self.name.clone());
         item.bundle_id = Set(self.bundle_id.clone());
-        item.icon_url = Set(self.icon_url.clone());
+        item.icon_file_id = Set(self.icon_file_id.clone());
+        item.current_version_id = Set(self.current_version_id.clone());
         item.description = Set(self.description.clone());
     }
 }

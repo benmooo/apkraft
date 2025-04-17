@@ -1,6 +1,8 @@
 pub mod auth;
 
-pub mod apk_file;
+pub mod platform;
+
+pub mod file;
+
 pub mod app;
 pub mod app_version;
-pub mod platform;

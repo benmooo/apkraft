@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use loco_rs::storage::{self, Storage};
 use loco_rs::{
     app::{AppContext, Hooks, Initializer},
     bgworker::{BackgroundWorker, Queue},
@@ -12,6 +13,7 @@ use loco_rs::{
 };
 use migration::Migrator;
 use std::path::Path;
+use std::sync::Arc;
 
 #[allow(unused_imports)]
 use crate::{controllers, models::_entities::users, tasks, workers::downloader::DownloadWorker};
@@ -48,8 +50,8 @@ impl Hooks for App {
     fn routes(_ctx: &AppContext) -> AppRoutes {
         AppRoutes::with_default_routes() // controller routes below
             .add_route(controllers::app_version::routes())
-            .add_route(controllers::apk_file::routes())
             .add_route(controllers::app::routes())
+            .add_route(controllers::file::routes())
             .add_route(controllers::platform::routes())
             .add_route(controllers::auth::routes())
     }
@@ -71,4 +73,17 @@ impl Hooks for App {
             .await?;
         Ok(())
     }
+
+    async fn after_context(ctx: AppContext) -> Result<AppContext> {
+        let storage = Storage::single(
+            storage::drivers::local::new_with_prefix(STORAGE_PREFIX)
+                .expect("fs service should build with success"),
+        );
+        Ok(AppContext {
+            storage: Arc::new(storage),
+            ..ctx
+        })
+    }
 }
+
+const STORAGE_PREFIX: &str = "static/uploads";

@@ -13,8 +13,8 @@ pub struct Model {
     pub name: String,
     #[sea_orm(unique)]
     pub bundle_id: String,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub icon_url: Option<String>,
+    pub icon_file_id: Option<i32>,
+    pub current_version_id: Option<i32>,
     #[sea_orm(column_type = "Text", nullable)]
     pub description: Option<String>,
     pub platform_id: i32,
@@ -22,8 +22,22 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::app_versions::Entity")]
+    #[sea_orm(
+        belongs_to = "super::app_versions::Entity",
+        from = "Column::CurrentVersionId",
+        to = "super::app_versions::Column::Id",
+        on_update = "Cascade",
+        on_delete = "Cascade"
+    )]
     AppVersions,
+    #[sea_orm(
+        belongs_to = "super::files::Entity",
+        from = "Column::IconFileId",
+        to = "super::files::Column::Id",
+        on_update = "Cascade",
+        on_delete = "Cascade"
+    )]
+    Files,
     #[sea_orm(
         belongs_to = "super::platforms::Entity",
         from = "Column::PlatformId",
@@ -37,6 +51,12 @@ pub enum Relation {
 impl Related<super::app_versions::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::AppVersions.def()
+    }
+}
+
+impl Related<super::files::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Files.def()
     }
 }
 

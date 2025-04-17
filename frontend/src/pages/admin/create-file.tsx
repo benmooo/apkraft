@@ -14,22 +14,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import axios from "axios";
 
-// APK file upload validation schema
-const apkUploadSchema = z.object({
+const supportedFileTypes = ["apk", "jpg", "jpeg", "png", "svg", "webp"];
+
+// file upload validation schema
+const uploadSchema = z.object({
   name: z.string().min(1, "Filename is required"),
-  notes: z.string().optional(),
+  description: z.string().optional(),
 });
 
-export default function CreateApkPage() {
+export default function CreateFilePage() {
   const navigate = useNavigate();
 
   // Form state
   const [name, setName] = React.useState("");
-  const [notes, setNotes] = React.useState("");
-  const [errors, setErrors] = React.useState<{ name?: string; notes?: string }>(
-    {},
-  );
+  const [description, setDescription] = React.useState("");
+  const [errors, setErrors] = React.useState<{
+    name?: string;
+    description?: string;
+  }>({});
 
   // File upload state
   const [file, setFile] = React.useState<File | null>(null);
@@ -106,7 +110,7 @@ export default function CreateApkPage() {
     e.preventDefault();
 
     // Validate form
-    const newErrors: { name?: string; notes?: string } = {};
+    const newErrors: { name?: string; description?: string } = {};
 
     if (!name.trim()) {
       newErrors.name = "Filename is required";
@@ -114,7 +118,7 @@ export default function CreateApkPage() {
 
     if (!file) {
       toast("Error", {
-        description: "Please select an APK file to upload",
+        description: "Please select a file to upload",
       });
       return;
     }
@@ -126,20 +130,35 @@ export default function CreateApkPage() {
       // In a real app, you would upload the file to your server
       console.log("Uploading file:", file);
       console.log("Name:", name);
-      console.log("Notes:", notes);
+      console.log("Description:", description);
 
       // Simulate upload
       simulateUpload();
 
+      const formData = new FormData();
+      formData.append("file0", file);
+      axios
+        .post("http://localhost:5150/api/files", formData, {
+          params: {
+            description: description,
+          },
+        })
+        .then((response) => {
+          console.log(response.data);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+
       // Show success toast after "upload" completes
       setTimeout(() => {
-        toast("APK Uploaded", {
+        toast("File Uploaded", {
           description: `${file.name} has been uploaded successfully.`,
         });
 
-        // Navigate back to the APK files list
+        // Navigate back to the files list
         setTimeout(() => {
-          navigate("/admin/apk-files");
+          navigate("/admin/files");
         }, 1000);
       }, 5000); // After upload simulation completes
     }
@@ -152,24 +171,24 @@ export default function CreateApkPage() {
           variant="ghost"
           size="icon"
           className="mr-2"
-          onClick={() => navigate("/admin/apk-files")}
+          onClick={() => navigate("/admin/files")}
         >
           <ArrowLeftIcon className="h-4 w-4" />
         </Button>
-        <h1 className="text-3xl font-bold tracking-tight">Upload APK File</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Upload File</h1>
       </div>
 
       <div className="grid gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>APK File Details</CardTitle>
+            <CardTitle>File Details</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="apk-file">
-                    APK File <span className="text-destructive">*</span>
+                  <Label htmlFor="file">
+                    File <span className="text-destructive">*</span>
                   </Label>
                   <div className="mt-2">
                     {!file ? (
@@ -178,11 +197,10 @@ export default function CreateApkPage() {
                         onClick={handleUploadClick}
                       >
                         <input
-                          id="apk-file"
+                          id="file"
                           type="file"
                           ref={fileInputRef}
                           className="hidden"
-                          accept=".apk"
                           onChange={handleFileChange}
                         />
                         <UploadIcon className="mx-auto h-10 w-10 text-muted-foreground" />
@@ -194,7 +212,11 @@ export default function CreateApkPage() {
                             or drag and drop
                             <br />
                             <span className="text-sm text-muted-foreground">
-                              APK files only (*.apk)
+                              Image and APK files(
+                              {supportedFileTypes
+                                .map((type) => `*.${type}`)
+                                .join(", ")}
+                              )
                             </span>
                           </p>
                         </div>
@@ -279,9 +301,10 @@ export default function CreateApkPage() {
                   </Label>
                   <Input
                     id="name"
+                    disabled
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter name for this APK file"
+                    placeholder="Enter name for this file"
                     className={errors.name ? "border-destructive" : ""}
                   />
                   {errors.name && (
@@ -295,17 +318,16 @@ export default function CreateApkPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
+                  <Label htmlFor="description">Description</Label>
                   <Textarea
-                    id="notes"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Optional notes about this APK file"
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Optional description about this file"
                     className="min-h-24"
                   />
                   <p className="text-sm text-muted-foreground">
-                    Add any additional information about this APK file
-                    (optional).
+                    Add any additional information about this file (optional).
                   </p>
                 </div>
               </div>
@@ -313,13 +335,13 @@ export default function CreateApkPage() {
               <div className="flex justify-end space-x-4">
                 <Button
                   variant="outline"
-                  onClick={() => navigate("/admin/apk-files")}
+                  onClick={() => navigate("/admin/files")}
                   type="button"
                 >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isUploading || !file}>
-                  {isUploading ? "Uploading..." : "Upload APK"}
+                  {isUploading ? "Uploading..." : "Upload File"}
                 </Button>
               </div>
             </form>

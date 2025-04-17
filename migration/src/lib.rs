@@ -4,11 +4,12 @@ pub use sea_orm_migration::prelude::*;
 mod m20220101_000001_users;
 
 mod m20250415_070650_platforms;
-mod m20250415_071137_apps;
-mod m20250415_075142_apk_files;
-mod m20250415_082441_app_versions;
-mod m20250415_101650_add_current_version_id_to_apps;
-mod m20250415_102251_create_fk_apps_current_version_id_to_app_versions;
+mod m20250417_032825_files;
+mod m20250417_034939_apps;
+mod m20250417_035316_app_versions;
+mod m20250417_035727_create_fk_apps_icon_file_id_to_files;
+mod m20250417_035735_create_fk_apps_current_version_id_to_app_versions;
+mod m20250417_035743_create_fk_app_versions_apk_file_id_to_files;
 pub struct Migrator;
 
 #[async_trait::async_trait]
@@ -17,11 +18,12 @@ impl MigratorTrait for Migrator {
         vec![
             Box::new(m20220101_000001_users::Migration),
             Box::new(m20250415_070650_platforms::Migration),
-            Box::new(m20250415_071137_apps::Migration),
-            Box::new(m20250415_075142_apk_files::Migration),
-            Box::new(m20250415_082441_app_versions::Migration),
-            Box::new(m20250415_101650_add_current_version_id_to_apps::Migration),
-            Box::new(m20250415_102251_create_fk_apps_current_version_id_to_app_versions::Migration),
+            Box::new(m20250417_032825_files::Migration),
+            Box::new(m20250417_034939_apps::Migration),
+            Box::new(m20250417_035316_app_versions::Migration),
+            Box::new(m20250417_035727_create_fk_apps_icon_file_id_to_files::Migration),
+            Box::new(m20250417_035735_create_fk_apps_current_version_id_to_app_versions::Migration),
+            Box::new(m20250417_035743_create_fk_app_versions_apk_file_id_to_files::Migration),
             // inject-above (do not remove this comment)
         ]
     }

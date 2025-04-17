@@ -1,9 +1,9 @@
 #![allow(clippy::missing_errors_doc)]
 #![allow(clippy::unnecessary_struct_initialization)]
 #![allow(clippy::unused_async)]
-use axum::debug_handler;
 use loco_rs::prelude::*;
 use serde::{Deserialize, Serialize};
+use axum::debug_handler;
 
 use crate::models::_entities::app_versions::{ActiveModel, Entity, Model};
 
@@ -12,16 +12,18 @@ pub struct Params {
     pub version_code: String,
     pub version_name: String,
     pub release_notes: Option<String>,
+    pub apk_file_id: Option<i32>,
     pub published_at: Option<DateTimeWithTimeZone>,
-}
+    }
 
 impl Params {
     fn update(&self, item: &mut ActiveModel) {
-        item.version_code = Set(self.version_code.clone());
-        item.version_name = Set(self.version_name.clone());
-        item.release_notes = Set(self.release_notes.clone());
-        item.published_at = Set(self.published_at.clone());
-    }
+      item.version_code = Set(self.version_code.clone());
+      item.version_name = Set(self.version_name.clone());
+      item.release_notes = Set(self.release_notes.clone());
+      item.apk_file_id = Set(self.apk_file_id.clone());
+      item.published_at = Set(self.published_at.clone());
+      }
 }
 
 async fn load_item(ctx: &AppContext, id: i32) -> Result<Model> {

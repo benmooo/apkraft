@@ -4,9 +4,9 @@ use serial_test::serial;
 
 #[tokio::test]
 #[serial]
-async fn can_get_apk_files() {
+async fn can_get_files() {
     request::<App, _, _>(|request, _ctx| async move {
-        let res = request.get("/api/apk_files/").await;
+        let res = request.get("/api/files/").await;
         assert_eq!(res.status_code(), 200);
 
         // you can assert content like this:

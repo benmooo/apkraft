@@ -2,8 +2,8 @@
 
 pub mod prelude;
 
-pub mod apk_files;
 pub mod app_versions;
 pub mod apps;
+pub mod files;
 pub mod platforms;
 pub mod users;
