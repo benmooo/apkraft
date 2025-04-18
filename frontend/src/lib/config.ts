@@ -4,3 +4,9 @@ export const palette = {
 };
 
 export const adminPrefix = "/admin";
+
+export const defaultPageSize = 5;
+
+// query client
+export const staleTime = 5 * 1000;
+export const gcTime = 5 * 60 * 1000;

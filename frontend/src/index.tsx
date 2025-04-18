@@ -3,12 +3,9 @@ import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import LandingPage from "./pages/landing-page";
-import AdminLayout from "./components/layouts/admin-layout";
-import Apps from "./pages/admin/apps";
-import { adminPrefix } from "./lib/config";
-import { RouterErrorBoundary } from "./components/features/router-error-boundary";
-import Admin from "./pages/admin/admin";
+import { routes } from "./lib/routes";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { gcTime, staleTime } from "./lib/config";
 
 const root = document.getElementById("root");
 
@@ -16,69 +13,24 @@ if (!root) {
   throw new Error("No root element found");
 }
 
-let router = createBrowserRouter([
-  {
-    path: "/",
-    Component: LandingPage,
-    // Add error boundary to root route
-    ErrorBoundary: RouterErrorBoundary,
+const router = createBrowserRouter(routes);
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: staleTime,
+      // previously known as cacheTime
+      gcTime: gcTime,
+    },
   },
-  {
-    path: adminPrefix,
-    Component: AdminLayout,
-    // Add error boundary to admin layout route
-    ErrorBoundary: RouterErrorBoundary,
-    children: [
-      {
-        index: true,
-        Component: Admin,
-      },
-      {
-        path: "apps",
-        Component: Apps,
-      },
-      {
-        path: "apps/create",
-        Component: React.lazy(() => import("./pages/admin/create-app")),
-      },
-      {
-        path: "app-versions",
-        Component: React.lazy(() => import("./pages/admin/app-versions")),
-      },
-      {
-        path: "app-versions/create",
-        Component: React.lazy(() => import("./pages/admin/create-app-version")),
-      },
-      {
-        path: "files",
-        Component: React.lazy(() => import("./pages/admin/files")),
-      },
-      {
-        path: "files/create",
-        Component: React.lazy(() => import("./pages/admin/create-file")),
-      },
-      {
-        path: "logs",
-        Component: React.lazy(() => import("./pages/admin/logs")),
-      },
-      {
-        path: "settings",
-        Component: () => <h1 className="text-2xl font-semibold">Settings</h1>,
-      },
-    ],
-  },
-  // Catch-all route for 404 errors
-  {
-    path: "*",
-    Component: React.lazy(() => import("./pages/error/not-found")),
-    ErrorBoundary: RouterErrorBoundary,
-  },
-]);
+});
 
 ReactDOM.createRoot(root).render(
   <React.StrictMode>
-    <ThemeProvider>
-      <RouterProvider router={router} />
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <RouterProvider router={router} />
+      </ThemeProvider>
+    </QueryClientProvider>
   </React.StrictMode>,
 );

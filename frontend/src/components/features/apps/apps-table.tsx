@@ -2,14 +2,12 @@
 
 import * as React from "react";
 import {
-  ColumnDef,
   ColumnFiltersState,
   SortingState,
   VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
@@ -20,11 +18,8 @@ import {
   ChevronsLeftIcon,
   ChevronsRightIcon,
   ColumnsIcon,
-  MoreVerticalIcon,
   PlusIcon,
 } from "lucide-react";
-import { z } from "zod";
-import { format } from "date-fns";
 import { Link, useNavigate } from "react-router";
 
 import { Button } from "@/components/ui/button";
@@ -32,12 +27,9 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -53,55 +45,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-
-// Schema based on the App model from Rust
-export const AppSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  bundle_id: z.string(),
-  icon_url: z.string().nullable(),
-  description: z.string().nullable(),
-  platform_id: z.number(),
-  created_at: z.string(),
-  updated_at: z.string(),
-});
-
-type App = z.infer<typeof AppSchema>;
-
-// Sample data for demonstration
-const mockApps: App[] = [
-  {
-    id: 1,
-    name: "APKraft Manager",
-    bundle_id: "com.apkraft.manager",
-    icon_url: "https://ui.shadcn.com/favicon.ico",
-    description: "APK management application",
-    platform_id: 1,
-    created_at: new Date(2023, 0, 15).toISOString(),
-    updated_at: new Date(2023, 2, 10).toISOString(),
-  },
-  {
-    id: 2,
-    name: "APKraft Dashboard",
-    bundle_id: "com.apkraft.dashboard",
-    icon_url: null,
-    description: "Admin dashboard for APK management",
-    platform_id: 1,
-    created_at: new Date(2023, 1, 20).toISOString(),
-    updated_at: new Date(2023, 3, 5).toISOString(),
-  },
-  {
-    id: 3,
-    name: "APKraft Mobile",
-    bundle_id: "com.apkraft.mobile",
-    icon_url: "https://ui.shadcn.com/favicon.ico",
-    description: null,
-    platform_id: 2,
-    created_at: new Date(2023, 2, 10).toISOString(),
-    updated_at: new Date(2023, 4, 15).toISOString(),
-  },
-];
+import { useQuery } from "@tanstack/react-query";
+import client from "@/lib/client";
+import withFullWidthTableRow from "@/lib/hoc/with-full-width-table-row";
+import LoadingSpinner from "@/components/loading-spinner";
+import EmptyData from "@/components/empty-data";
+import ErrorRetry from "@/components/error-retry";
+import { usePagination } from "@/lib/hooks/use-pagination";
+import { App } from "@/schemas";
+import { appColumns } from "./apps-column";
 
 export default function Apps() {
   const navigate = useNavigate();
@@ -112,141 +64,33 @@ export default function Apps() {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  const [pagination, setPagination] = React.useState({
-    pageIndex: 0,
-    pageSize: 10,
+
+  const { pagination, onPaginationChange } = usePagination();
+  const { pageIndex, pageSize } = pagination;
+
+  const { data, isError, isLoading, error, refetch, isRefetching } = useQuery({
+    queryKey: ["apps", pageIndex, pageSize],
+    queryFn: async () => (await client.get("/apps?")).data as App[],
   });
 
-  // Define columns for the data table
-  const columns: ColumnDef<App>[] = [
-    {
-      accessorKey: "name",
-      header: "App Name",
-      cell: ({ row }) => {
-        const app = row.original;
-        return (
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 flex items-center justify-center rounded-md bg-muted overflow-hidden">
-              {app.icon_url ? (
-                <img
-                  src={app.icon_url}
-                  alt={app.name}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="text-xs text-muted-foreground font-medium">
-                  No Icon
-                </div>
-              )}
-            </div>
-            <div>
-              <div className="font-medium">{app.name}</div>
-              <div className="text-xs text-muted-foreground">
-                {app.bundle_id}
-              </div>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "description",
-      header: "Description",
-      cell: ({ row }) => {
-        const description = row.original.description;
-        return (
-          description || (
-            <span className="text-muted-foreground text-sm">
-              No description
-            </span>
-          )
-        );
-      },
-    },
-    {
-      accessorKey: "platform_id",
-      header: "Platform",
-      cell: ({ row }) => {
-        const platformId = row.original.platform_id;
-        const platformName = platformId === 1 ? "Android" : "iOS";
-        return (
-          <Badge variant="outline" className="px-2">
-            {platformName}
-          </Badge>
-        );
-      },
-    },
-    {
-      accessorKey: "created_at",
-      header: "Created",
-      cell: ({ row }) => {
-        return format(new Date(row.original.created_at), "MMM dd, yyyy");
-      },
-    },
-    {
-      accessorKey: "updated_at",
-      header: "Last Updated",
-      cell: ({ row }) => {
-        return format(new Date(row.original.updated_at), "MMM dd, yyyy");
-      },
-    },
-    {
-      id: "actions",
-      cell: ({ row }) => {
-        const app = row.original;
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
-                size="icon"
-              >
-                <MoreVerticalIcon className="h-4 w-4" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[160px]">
-              <DropdownMenuItem
-                onClick={() => navigate(`/admin/apps/${app.id}`)}
-              >
-                View Details
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => navigate(`/admin/apps/${app.id}/edit`)}
-              >
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={() => {
-                  // Implement delete functionality
-                  console.log(`Delete app ${app.id}`);
-                }}
-              >
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
-    },
-  ];
+  const handleRefetch = () => {
+    refetch();
+  };
 
   // Initialize table
   const table = useReactTable({
-    data: mockApps,
-    columns,
+    data: data || [],
+    columns: appColumns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    // getPaginationRowModel: getPaginationRowModel(), // no need for server side pagination
+    manualPagination: true,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    onPaginationChange: setPagination,
+    onPaginationChange,
     state: {
       sorting,
       columnFilters,
@@ -255,6 +99,10 @@ export default function Apps() {
       pagination,
     },
   });
+
+  const onPageSizeChange = (value: string) => {
+    table.setPageSize(Number(value));
+  };
 
   return (
     <div className="p-6 space-y-4">
@@ -328,8 +176,25 @@ export default function Apps() {
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
+            {(() => {
+              if (isLoading)
+                return (
+                  <LoadingTableRow colSpan={appColumns.length}></LoadingTableRow>
+                );
+              if (isError)
+                return (
+                  <ErrorTableRow
+                    colSpan={appColumns.length}
+                    onRetry={handleRefetch}
+                    isRetrying={isRefetching}
+                    message={error?.message}
+                  ></ErrorTableRow>
+                );
+
+              if (!table.getRowModel().rows?.length)
+                return <EmptyTableRow colSpan={appColumns.length}></EmptyTableRow>;
+
+              return table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
@@ -343,17 +208,8 @@ export default function Apps() {
                     </TableCell>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No apps found.
-                </TableCell>
-              </TableRow>
-            )}
+              ));
+            })()}
           </TableBody>
         </Table>
       </div>
@@ -366,12 +222,7 @@ export default function Apps() {
         <div className="flex items-center space-x-6 lg:space-x-8">
           <div className="flex items-center space-x-2">
             <p className="text-sm font-medium">Rows per page</p>
-            <Select
-              value={`${table.getState().pagination.pageSize}`}
-              onValueChange={(value) => {
-                table.setPageSize(Number(value));
-              }}
-            >
+            <Select value={`${pageSize}`} onValueChange={onPageSizeChange}>
               <SelectTrigger className="h-8 w-[70px]">
                 <SelectValue
                   placeholder={table.getState().pagination.pageSize}
@@ -394,8 +245,8 @@ export default function Apps() {
             <Button
               variant="outline"
               className="hidden h-8 w-8 p-0 lg:flex"
-              onClick={() => table.setPageIndex(0)}
               disabled={!table.getCanPreviousPage()}
+              onClick={() => table.setPageIndex(0)}
             >
               <span className="sr-only">Go to first page</span>
               <ChevronsLeftIcon className="h-4 w-4" />
@@ -403,8 +254,8 @@ export default function Apps() {
             <Button
               variant="outline"
               className="h-8 w-8 p-0"
-              onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
+              onClick={table.previousPage}
             >
               <span className="sr-only">Go to previous page</span>
               <ChevronLeftIcon className="h-4 w-4" />
@@ -412,8 +263,8 @@ export default function Apps() {
             <Button
               variant="outline"
               className="h-8 w-8 p-0"
-              onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
+              onClick={table.nextPage}
             >
               <span className="sr-only">Go to next page</span>
               <ChevronRightIcon className="h-4 w-4" />
@@ -421,8 +272,8 @@ export default function Apps() {
             <Button
               variant="outline"
               className="hidden h-8 w-8 p-0 lg:flex"
-              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
               disabled={!table.getCanNextPage()}
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
             >
               <span className="sr-only">Go to last page</span>
               <ChevronsRightIcon className="h-4 w-4" />
@@ -433,3 +284,7 @@ export default function Apps() {
     </div>
   );
 }
+
+const LoadingTableRow = withFullWidthTableRow(LoadingSpinner);
+const ErrorTableRow = withFullWidthTableRow(ErrorRetry);
+const EmptyTableRow = withFullWidthTableRow(EmptyData);

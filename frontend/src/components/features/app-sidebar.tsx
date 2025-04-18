@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import { adminPrefix, appName, palette } from "@/lib/config";
 import { ApkraftLogo } from "../ui/apkraft-logo";
-import { routes, withPrefix } from "@/lib/routes";
+import { navItems, withPrefix } from "@/lib/nav-items";
 import { useMatch } from "react-router";
 import logo from "@/assets/apkraft_logo.png";
 
@@ -47,7 +47,7 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const navMain = routes.map(withPrefixAdmin).map((route) => ({
+  const navMain = navItems.map(withPrefixAdmin).map((route) => ({
     title: route.title,
     url: route.url,
     icon: route.icon,

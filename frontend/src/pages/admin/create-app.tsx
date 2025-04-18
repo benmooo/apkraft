@@ -43,7 +43,7 @@ const createAppSchema = z.object({
     }),
   description: z.string().optional(),
   icon_url: z.string().url({ message: "Please enter a valid URL" }).optional(),
-  platform_id: z.string(),
+  platform_id: z.number(),
 });
 
 type CreateAppFormValues = z.infer<typeof createAppSchema>;
@@ -54,7 +54,7 @@ const defaultValues: Partial<CreateAppFormValues> = {
   bundle_id: "",
   description: "",
   icon_url: "",
-  platform_id: "1", // Default to Android
+  platform_id: 1, // Default to Android
 };
 
 export default function CreateAppPage() {
@@ -152,7 +152,7 @@ export default function CreateAppPage() {
                     <Select
                       disabled
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      defaultValue={field.value.toString()}
                     >
                       <FormControl>
                         <SelectTrigger>
