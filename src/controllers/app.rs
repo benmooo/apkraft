@@ -14,6 +14,7 @@ pub struct Params {
     pub icon_file_id: Option<i32>,
     pub current_version_id: Option<i32>,
     pub description: Option<String>,
+    pub platform_id: i32,
 }
 
 impl Params {
@@ -23,6 +24,7 @@ impl Params {
         item.icon_file_id = Set(self.icon_file_id.clone());
         item.current_version_id = Set(self.current_version_id.clone());
         item.description = Set(self.description.clone());
+        item.platform_id = Set(self.platform_id);
     }
 }
 
@@ -42,8 +44,10 @@ pub async fn add(State(ctx): State<AppContext>, Json(params): Json<Params>) -> R
         ..Default::default()
     };
     params.update(&mut item);
-    let item = item.insert(&ctx.db).await?;
-    format::json(item)
+    item.insert(&ctx.db)
+        .await
+        .map_err(Error::msg)
+        .and_then(format::json)
 }
 
 #[debug_handler]

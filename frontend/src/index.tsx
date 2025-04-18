@@ -15,7 +15,7 @@ if (!root) {
 
 const router = createBrowserRouter(routes);
 // Create a client
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: staleTime,

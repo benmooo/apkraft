@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { z } from "zod";
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, UploadIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,38 +27,31 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { App, CreateAppFormValues, createAppSchema } from "@/schemas";
+import React, { useEffect } from "react";
+import { useFileUpload } from "@/hooks/use-file-upload";
+import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
+import client from "@/lib/client";
+import { useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/index";
 
 // Create a schema for app creation that matches the Model in apps.rs
-const createAppSchema = z.object({
-  name: z.string().min(2, {
-    message: "App name must be at least 2 characters.",
-  }),
-  bundle_id: z
-    .string()
-    .min(3, {
-      message: "Bundle ID must be at least 3 characters.",
-    })
-    .regex(/^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+[0-9a-z_]$/i, {
-      message: "Please provide a valid bundle ID (e.g., com.apkraft.myapp)",
-    }),
-  description: z.string().optional(),
-  icon_url: z.string().url({ message: "Please enter a valid URL" }).optional(),
-  platform_id: z.number(),
-});
-
-type CreateAppFormValues = z.infer<typeof createAppSchema>;
 
 // Default values for the form
 const defaultValues: Partial<CreateAppFormValues> = {
   name: "",
   bundle_id: "",
   description: "",
-  icon_url: "",
   platform_id: 1, // Default to Android
 };
 
 export default function CreateAppPage() {
   const navigate = useNavigate();
+
+  const [file, setFile] = React.useState<File | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const { uploading, progress, uploadFile, data, error } = useFileUpload();
 
   // Initialize the form
   const form = useForm<CreateAppFormValues>({
@@ -67,25 +60,51 @@ export default function CreateAppPage() {
     mode: "onChange",
   });
 
+  const createApp = async (app: CreateAppFormValues) => {
+    const { data } = await client.post("/apps", app);
+    return data as App;
+  };
+
+  const mutation = useMutation({
+    mutationFn: createApp,
+    onSuccess(data) {
+      toast("App created", {
+        description: `Successfully created ${data.name}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["apps"] });
+    },
+    onError(error) {
+      toast("Error creating app", {
+        description: error.message,
+      });
+    },
+  });
+
   // Handle form submission
   function onSubmit(data: CreateAppFormValues) {
-    // In a real app, you would send this data to your API
-    console.log(data);
-
-    // Show success toast
-    toast("App created", {
-      description: `Successfully created ${data.name}`,
-      action: {
-        label: "Undo",
-        onClick: () => console.log("Undo"),
-      },
-    });
-
-    // Navigate back to the apps list
-    setTimeout(() => {
-      navigate("/admin/apps");
-    }, 1000);
+    mutation.mutate(data);
   }
+
+  // Handle file selection
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0] || null;
+    setFile(selectedFile);
+
+    // Upload file if selected
+    file && uploadFile(file);
+  };
+
+  useEffect(() => {
+    if (data) {
+      // update form data
+      form.setValue("icon_file_id", data.id);
+    }
+  }, [data]);
+
+  // Handle file upload button click
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
 
   return (
     <div className="container max-w-3xl py-10">
@@ -171,22 +190,73 @@ export default function CreateAppPage() {
                   </FormItem>
                 )}
               />
+              <div className="space-y-4">
+                <div>
+                  <FormLabel htmlFor="icon-file">Icon File</FormLabel>
+                  <div className="mt-2">
+                    <div
+                      className={`rounded-md border border-dashed p-6 text-center cursor-pointer hover:bg-muted/50 ${file ? "border-primary/50 bg-primary/5" : ""}`}
+                      onClick={handleUploadClick}
+                    >
+                      <input
+                        id="icon-file"
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        accept=".png"
+                        onChange={handleFileChange}
+                      />
+                      <UploadIcon className="mx-auto h-10 w-10 text-muted-foreground" />
+                      <div className="mt-2">
+                        {file ? (
+                          <div>
+                            <p className="font-medium text-primary">
+                              {file.name}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {(file.size / (1024 * 1024)).toFixed(2)} MB
+                            </p>
+                          </div>
+                        ) : (
+                          <p>
+                            <span className="font-medium text-primary">
+                              Click to upload
+                            </span>{" "}
+                            or drag and drop
+                            <br />
+                            <span className="text-sm text-muted-foreground">
+                              image files only (*.png, *.jpg, *.jpeg, *.svg)
+                            </span>
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {uploading && (
+                    <div className="mt-4 space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Uploading...</span>
+                        <span>{progress ?? 0}%</span>
+                      </div>
+                      <Progress value={progress ?? 0} />
+                    </div>
+                  )}
+                </div>
+              </div>
 
               <FormField
                 control={form.control}
-                name="icon_url"
+                name="icon_file_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Icon URL</FormLabel>
+                    <FormLabel>Icon File ID *</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="https://example.com/icon.png"
-                        {...field}
-                        value={field.value || ""}
-                      />
+                      <Input disabled {...field} value={data?.id || ""} />
                     </FormControl>
                     <FormDescription>
-                      A URL pointing to the app's icon image (optional).
+                      A Icon File ID that automatically generated when file icon
+                      is uploaded.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -215,6 +285,19 @@ export default function CreateAppPage() {
                 )}
               />
 
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">
+                    Publish Immediately
+                  </FormLabel>
+                  <FormDescription>
+                    Make this version available as soon as it's uploaded.
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch checked={false} />
+                </FormControl>
+              </FormItem>
               <div className="flex justify-end space-x-4">
                 <Button
                   variant="outline"
@@ -223,7 +306,9 @@ export default function CreateAppPage() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit">Create App</Button>
+                <Button type="submit" disabled={mutation.isPending}>
+                  Create App
+                </Button>
               </div>
             </form>
           </Form>

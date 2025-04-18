@@ -51,7 +51,7 @@ import withFullWidthTableRow from "@/lib/hoc/with-full-width-table-row";
 import LoadingSpinner from "@/components/loading-spinner";
 import EmptyData from "@/components/empty-data";
 import ErrorRetry from "@/components/error-retry";
-import { usePagination } from "@/lib/hooks/use-pagination";
+import { usePagination } from "@/hooks/use-pagination";
 import { App } from "@/schemas";
 import { appColumns } from "./apps-column";
 
@@ -179,7 +179,9 @@ export default function Apps() {
             {(() => {
               if (isLoading)
                 return (
-                  <LoadingTableRow colSpan={appColumns.length}></LoadingTableRow>
+                  <LoadingTableRow
+                    colSpan={appColumns.length}
+                  ></LoadingTableRow>
                 );
               if (isError)
                 return (
@@ -192,7 +194,9 @@ export default function Apps() {
                 );
 
               if (!table.getRowModel().rows?.length)
-                return <EmptyTableRow colSpan={appColumns.length}></EmptyTableRow>;
+                return (
+                  <EmptyTableRow colSpan={appColumns.length}></EmptyTableRow>
+                );
 
               return table.getRowModel().rows.map((row) => (
                 <TableRow

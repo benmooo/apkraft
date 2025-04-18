@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { defaultPageSize } from "../config";
+import { defaultPageSize } from "../lib/config";
 
 export const usePagination = () => {
   const [pagination, setPagination] = useState({
