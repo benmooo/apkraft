@@ -50,9 +50,9 @@ export const appColumns: ColumnDef<App>[] = [
       return (
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 flex items-center justify-center rounded-md bg-muted overflow-hidden">
-            {app.icon_url ? (
+            {false ? (
               <img
-                src={app.icon_url}
+                src={`app.icon_file_id`}
                 alt={app.name}
                 className="h-full w-full object-cover"
               />

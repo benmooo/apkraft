@@ -3,7 +3,7 @@ import { defaultPageSize } from "../lib/config";
 
 export const usePagination = () => {
   const [pagination, setPagination] = useState({
-    pageIndex: 1,
+    pageIndex: 0,
     pageSize: defaultPageSize,
   });
 

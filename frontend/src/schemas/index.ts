@@ -4,7 +4,7 @@ export const AppSchema = z.object({
   id: z.number(),
   name: z.string(),
   bundle_id: z.string(),
-  icon_url: z.string().nullable(),
+  icon_file_id: z.number().nullable(),
   description: z.string().nullable(),
   platform_id: z.number(),
   created_at: z.string(),

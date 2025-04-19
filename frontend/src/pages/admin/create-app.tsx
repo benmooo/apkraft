@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { z } from "zod";
-import { ArrowLeftIcon, UploadIcon } from "lucide-react";
+import { ArrowLeftIcon, LoaderIcon, PlusIcon, SendIcon, UploadIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -72,6 +72,7 @@ export default function CreateAppPage() {
         description: `Successfully created ${data.name}`,
       });
       queryClient.invalidateQueries({ queryKey: ["apps"] });
+      navigate(-1);
     },
     onError(error) {
       toast("Error creating app", {
@@ -88,10 +89,10 @@ export default function CreateAppPage() {
   // Handle file selection
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0] || null;
-    setFile(selectedFile);
-
-    // Upload file if selected
-    file && uploadFile(file);
+    if (selectedFile) {
+      setFile(selectedFile);
+      uploadFile(selectedFile);
+    }
   };
 
   useEffect(() => {
@@ -307,7 +308,12 @@ export default function CreateAppPage() {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={mutation.isPending}>
-                  Create App
+                  {!mutation.isPending ? (
+                    <PlusIcon />
+                  ) : (
+                    <LoaderIcon className="animate-spin" />
+                  )}
+                  {mutation.isPending ? "Creating..." : "Create App"}
                 </Button>
               </div>
             </form>

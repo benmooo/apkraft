@@ -91,6 +91,7 @@ export default function Apps() {
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     onPaginationChange,
+    rowCount: data?.length || 0,
     state: {
       sorting,
       columnFilters,

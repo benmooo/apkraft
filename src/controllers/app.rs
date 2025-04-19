@@ -44,10 +44,8 @@ pub async fn add(State(ctx): State<AppContext>, Json(params): Json<Params>) -> R
         ..Default::default()
     };
     params.update(&mut item);
-    item.insert(&ctx.db)
-        .await
-        .map_err(Error::msg)
-        .and_then(format::json)
+    let item = item.insert(&ctx.db).await?;
+    format::json(item)
 }
 
 #[debug_handler]
