@@ -48,3 +48,13 @@ export const FileSchema = z.object({
 export namespace Models {
   export type File = z.infer<typeof FileSchema>;
 }
+
+export type Pagination<T> = {
+  results: T[];
+  pagination: {
+    page: number;
+    page_size: number;
+    total_items: number;
+    total_pages: number;
+  };
+};

@@ -1,50 +1,46 @@
 #![allow(clippy::missing_errors_doc)]
 #![allow(clippy::unnecessary_struct_initialization)]
 #![allow(clippy::unused_async)]
-use axum::debug_handler;
+use axum::{debug_handler, extract::Query};
 use loco_rs::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::models::_entities::apps::{ActiveModel, Entity, Model};
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Params {
-    pub name: String,
-    pub bundle_id: String,
-    pub icon_file_id: Option<i32>,
-    pub current_version_id: Option<i32>,
-    pub description: Option<String>,
-    pub platform_id: i32,
-}
-
-impl Params {
-    fn update(&self, item: &mut ActiveModel) {
-        item.name = Set(self.name.clone());
-        item.bundle_id = Set(self.bundle_id.clone());
-        item.icon_file_id = Set(self.icon_file_id.clone());
-        item.current_version_id = Set(self.current_version_id.clone());
-        item.description = Set(self.description.clone());
-        item.platform_id = Set(self.platform_id);
-    }
-}
+use crate::{
+    models::{
+        _entities::apps::{ActiveModel, Entity, Model},
+        apps::{AppQuery, CreateApp},
+    },
+    views::apps::PaginationResponse,
+};
 
 async fn load_item(ctx: &AppContext, id: i32) -> Result<Model> {
     let item = Entity::find_by_id(id).one(&ctx.db).await?;
     item.ok_or_else(|| Error::NotFound)
 }
 
-#[debug_handler]
-pub async fn list(State(ctx): State<AppContext>) -> Result<Response> {
-    format::json(Entity::find().all(&ctx.db).await?)
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct QueryParams {
+    pub name: Option<String>,
+    pub bundle_id: Option<String>,
+    pub description: Option<String>,
+    pub platform_id: Option<i32>,
 }
 
 #[debug_handler]
-pub async fn add(State(ctx): State<AppContext>, Json(params): Json<Params>) -> Result<Response> {
-    let mut item = ActiveModel {
-        ..Default::default()
-    };
-    params.update(&mut item);
-    let item = item.insert(&ctx.db).await?;
+pub async fn list(
+    State(ctx): State<AppContext>,
+    Query(query): Query<AppQuery>,
+) -> Result<Response> {
+    let res = Model::query(&ctx.db, &query).await?;
+    format::json(PaginationResponse::new(res, &query.pagination))
+}
+
+#[debug_handler]
+pub async fn add(
+    State(ctx): State<AppContext>,
+    JsonValidateWithMessage(data): JsonValidateWithMessage<CreateApp>,
+) -> Result<Response> {
+    let item = ActiveModel::create(&ctx.db, &data).await?;
     format::json(item)
 }
 
@@ -52,7 +48,7 @@ pub async fn add(State(ctx): State<AppContext>, Json(params): Json<Params>) -> R
 pub async fn update(
     Path(id): Path<i32>,
     State(ctx): State<AppContext>,
-    Json(params): Json<Params>,
+    Json(params): Json<CreateApp>,
 ) -> Result<Response> {
     let item = load_item(&ctx, id).await?;
     let mut item = item.into_active_model();

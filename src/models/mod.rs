@@ -4,3 +4,5 @@ pub mod users;
 pub mod files;
 pub mod apps;
 pub mod app_versions;
+
+pub mod common;

@@ -52,7 +52,7 @@ import LoadingSpinner from "@/components/loading-spinner";
 import EmptyData from "@/components/empty-data";
 import ErrorRetry from "@/components/error-retry";
 import { usePagination } from "@/hooks/use-pagination";
-import { App } from "@/schemas";
+import { App, Pagination } from "@/schemas";
 import { appColumns } from "./apps-column";
 
 export default function Apps() {
@@ -70,7 +70,12 @@ export default function Apps() {
 
   const { data, isError, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["apps", pageIndex, pageSize],
-    queryFn: async () => (await client.get("/apps?")).data as App[],
+    queryFn: async () =>
+      (
+        await client.get("/apps", {
+          params: { page: pageIndex + 1, page_size: pageSize },
+        })
+      ).data as Pagination<App>,
   });
 
   const handleRefetch = () => {
@@ -79,7 +84,8 @@ export default function Apps() {
 
   // Initialize table
   const table = useReactTable({
-    data: data || [],
+    data: data?.results || [],
+    rowCount: data?.pagination.total_items || 0,
     columns: appColumns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -91,7 +97,6 @@ export default function Apps() {
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     onPaginationChange,
-    rowCount: data?.length || 0,
     state: {
       sorting,
       columnFilters,
