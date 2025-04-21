@@ -39,26 +39,6 @@ impl Model {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Validate)]
-pub struct CreateApp {
-    pub name: String,
-    pub bundle_id: String,
-    pub icon_file_id: Option<i32>,
-    pub current_version_id: Option<i32>,
-    pub description: Option<String>,
-    pub platform_id: i32,
-}
-
-impl CreateApp {
-    pub fn update(&self, item: &mut ActiveModel) {
-        item.name = Set(self.name.clone());
-        item.bundle_id = Set(self.bundle_id.clone());
-        item.icon_file_id = Set(self.icon_file_id.clone());
-        item.current_version_id = Set(self.current_version_id.clone());
-        item.description = Set(self.description.clone());
-        item.platform_id = Set(self.platform_id);
-    }
-}
 // implement your write-oriented logic here
 impl ActiveModel {
     pub async fn create(db: &DatabaseConnection, data: &CreateApp) -> Result<Model> {
@@ -111,5 +91,26 @@ impl ToCondition for AppQuery {
                 c.eq(apps::Column::PlatformId, *platform_id)
             })
             .build()
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Validate)]
+pub struct CreateApp {
+    pub name: String,
+    pub bundle_id: String,
+    pub icon_file_id: Option<i32>,
+    pub current_version_id: Option<i32>,
+    pub description: Option<String>,
+    pub platform_id: i32,
+}
+
+impl CreateApp {
+    pub fn update(&self, item: &mut ActiveModel) {
+        item.name = Set(self.name.clone());
+        item.bundle_id = Set(self.bundle_id.clone());
+        item.icon_file_id = Set(self.icon_file_id.clone());
+        item.current_version_id = Set(self.current_version_id.clone());
+        item.description = Set(self.description.clone());
+        item.platform_id = Set(self.platform_id);
     }
 }

@@ -38,6 +38,8 @@ include_dir = { version = "0.7" }
 axum-extra = { version = "0.10", features = ["form"] }
 hex = "0.4.3"
 sha2 = "0.10.8"
+serde_repr = "0.1.20"
+axum-valid = "0.23.0"
 
 [[bin]]
 name = "apkraft-cli"

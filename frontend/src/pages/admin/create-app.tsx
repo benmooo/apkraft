@@ -3,12 +3,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
-import { z } from "zod";
 import {
   ArrowLeftIcon,
   LoaderIcon,
   PlusIcon,
-  SendIcon,
   UploadIcon,
 } from "lucide-react";
 
@@ -33,7 +31,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { App, CreateAppFormValues, createAppSchema } from "@/schemas";
+import { App, CreateApp, createAppSchema } from "@/schemas";
 import React, { useEffect } from "react";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { Progress } from "@/components/ui/progress";
@@ -45,7 +43,7 @@ import { queryClient } from "@/index";
 // Create a schema for app creation that matches the Model in apps.rs
 
 // Default values for the form
-const defaultValues: Partial<CreateAppFormValues> = {
+const defaultValues: Partial<CreateApp> = {
   name: "",
   bundle_id: "",
   description: "",
@@ -60,13 +58,13 @@ export default function CreateAppPage() {
   const { uploading, progress, uploadFile, data, error } = useFileUpload();
 
   // Initialize the form
-  const form = useForm<CreateAppFormValues>({
+  const form = useForm<CreateApp>({
     resolver: zodResolver(createAppSchema),
     defaultValues,
     mode: "onChange",
   });
 
-  const createApp = async (app: CreateAppFormValues) => {
+  const createApp = async (app: CreateApp) => {
     const { data } = await client.post("/apps", app);
     return data as App;
   };
@@ -88,7 +86,7 @@ export default function CreateAppPage() {
   });
 
   // Handle form submission
-  function onSubmit(data: CreateAppFormValues) {
+  function onSubmit(data: CreateApp) {
     mutation.mutate(data);
   }
 
@@ -120,7 +118,7 @@ export default function CreateAppPage() {
           variant="ghost"
           size="icon"
           className="mr-2"
-          onClick={() => navigate("/admin/apps")}
+          onClick={() => navigate(-1)}
         >
           <ArrowLeftIcon className="h-4 w-4" />
         </Button>

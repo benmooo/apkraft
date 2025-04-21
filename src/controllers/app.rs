@@ -3,14 +3,13 @@
 #![allow(clippy::unused_async)]
 use axum::{debug_handler, extract::Query};
 use loco_rs::prelude::*;
-use serde::{Deserialize, Serialize};
 
 use crate::{
     models::{
         _entities::apps::{ActiveModel, Entity, Model},
         apps::{AppQuery, CreateApp},
     },
-    views::apps::PaginationResponse,
+    views::api_response::PagedApiResponse,
 };
 
 async fn load_item(ctx: &AppContext, id: i32) -> Result<Model> {
@@ -18,21 +17,13 @@ async fn load_item(ctx: &AppContext, id: i32) -> Result<Model> {
     item.ok_or_else(|| Error::NotFound)
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct QueryParams {
-    pub name: Option<String>,
-    pub bundle_id: Option<String>,
-    pub description: Option<String>,
-    pub platform_id: Option<i32>,
-}
-
 #[debug_handler]
 pub async fn list(
     State(ctx): State<AppContext>,
     Query(query): Query<AppQuery>,
-) -> Result<Response> {
+) -> Result<PagedApiResponse<Model>> {
     let res = Model::query(&ctx.db, &query).await?;
-    format::json(PaginationResponse::new(res, &query.pagination))
+    Ok(res.into())
 }
 
 #[debug_handler]
@@ -48,7 +39,7 @@ pub async fn add(
 pub async fn update(
     Path(id): Path<i32>,
     State(ctx): State<AppContext>,
-    Json(params): Json<CreateApp>,
+    JsonValidateWithMessage(params): JsonValidateWithMessage<CreateApp>,
 ) -> Result<Response> {
     let item = load_item(&ctx, id).await?;
     let mut item = item.into_active_model();

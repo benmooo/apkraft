@@ -19,8 +19,9 @@ import {
   ChevronsRightIcon,
   ColumnsIcon,
   PlusIcon,
+  FilterIcon,
 } from "lucide-react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -47,12 +48,17 @@ import {
 } from "@/components/ui/table";
 import { useQuery } from "@tanstack/react-query";
 import client from "@/lib/client";
+import withFullWidthTableRow from "@/lib/hoc/with-full-width-table-row";
+import LoadingSpinner from "@/components/loading-spinner";
+import EmptyData from "@/components/empty-data";
+import ErrorRetry from "@/components/error-retry";
 import { usePagination } from "@/hooks/use-pagination";
-import { App, PagedResponse } from "@/schemas";
-import { appColumns } from "./apps-column";
+import { AppVersion, PagedResponse } from "@/schemas";
+import { appVersionColumns } from "./columns";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyTableRow, ErrorTableRow, LoadingTableRow } from "../common";
 
-export default function Apps() {
+export default function AppVersionsTable() {
   const navigate = useNavigate();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -61,33 +67,30 @@ export default function Apps() {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [appFilter, setAppFilter] = React.useState<string>("");
 
   const { pagination, onPaginationChange } = usePagination();
   const { pageIndex, pageSize } = pagination;
 
   const { data, isError, isLoading, error, refetch, isRefetching } = useQuery({
-    queryKey: ["apps", pageIndex, pageSize],
+    queryKey: ["app-versions", pageIndex, pageSize],
     queryFn: async () =>
       (
-        await client.get("/apps", {
+        await client.get("/app_versions", {
           params: { page: pageIndex + 1, page_size: pageSize },
         })
-      ).data as PagedResponse<App>,
+      ).data as PagedResponse<AppVersion>,
   });
 
-  const handleRefetch = () => {
-    refetch();
-  };
-
-  // Initialize table
+  // Initialize table with TanStack React Table
   const table = useReactTable({
-    data: data?.data || [],
-    rowCount: data?.info?.total_items || 0,
-    columns: appColumns,
+    data: data?.data ?? [],
+    rowCount: data?.info?.total_items ?? 0,
+    columns: appVersionColumns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    // getPaginationRowModel: getPaginationRowModel(), // no need for server side pagination
     manualPagination: true,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -107,56 +110,91 @@ export default function Apps() {
     table.setPageSize(Number(value));
   };
 
+  const handleRefetch = () => {
+    refetch();
+  };
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Apps</h1>
-        <Button onClick={() => navigate("/admin/apps/create")} size="sm">
+        <h1 className="text-2xl font-semibold">App Versions</h1>
+        <Button
+          onClick={() => navigate("/admin/app-versions/create")}
+          size="sm"
+        >
           <PlusIcon className="h-4 w-4 mr-2" />
-          Add App
+          Add Version
         </Button>
       </div>
 
-      <div className="flex items-center justify-between py-4">
-        <div className="flex items-center gap-2">
-          <Input
-            placeholder="Filter apps..."
-            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("name")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
-                <ColumnsIcon className="mr-2 h-4 w-4" />
-                Columns
-                <ChevronDownIcon className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id === "platform_id" ? "Platform" : column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Filter Versions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="flex-1">
+              <Input
+                placeholder="Search versions..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  table.setPageIndex(0); // Reset to first page on search
+                }}
+                className="w-full"
+              />
+            </div>
+            <div className="w-full sm:w-[220px]">
+              <Select
+                value={appFilter}
+                onValueChange={(value) => {
+                  setAppFilter(value);
+                  table.setPageIndex(0); // Reset to first page on filter change
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by app" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="-">All Apps</SelectItem>
+                  {[].map((app, index) => (
+                    <SelectItem key={index} value={"df"}>
+                      {""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="h-10">
+                  <ColumnsIcon className="mr-2 h-4 w-4" />
+                  Columns
+                  <ChevronDownIcon className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[160px]">
+                {table
+                  .getAllColumns()
+                  .filter((column) => column.getCanHide())
+                  .map((column) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) =>
+                          column.toggleVisibility(!!value)
+                        }
+                      >
+                        {column.id}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="rounded-md border">
         <Table>
@@ -183,13 +221,13 @@ export default function Apps() {
               if (isLoading)
                 return (
                   <LoadingTableRow
-                    colSpan={appColumns.length}
+                    colSpan={appVersionColumns.length}
                   ></LoadingTableRow>
                 );
               if (isError || data?.code !== 0)
                 return (
                   <ErrorTableRow
-                    colSpan={appColumns.length}
+                    colSpan={appVersionColumns.length}
                     onRetry={handleRefetch}
                     isRetrying={isRefetching}
                     message={error?.message}
@@ -198,7 +236,7 @@ export default function Apps() {
 
               if (!table.getRowModel().rows?.length)
                 return (
-                  <EmptyTableRow colSpan={appColumns.length}></EmptyTableRow>
+                  <EmptyTableRow colSpan={appVersionColumns.length}></EmptyTableRow>
                 );
 
               return table.getRowModel().rows.map((row) => (
@@ -236,9 +274,9 @@ export default function Apps() {
                 />
               </SelectTrigger>
               <SelectContent side="top">
-                {[5, 10, 20, 30, 40, 50].map((pageSize) => (
-                  <SelectItem key={pageSize} value={`${pageSize}`}>
-                    {pageSize}
+                {[5, 10, 20, 30, 40, 50].map((size) => (
+                  <SelectItem key={size} value={`${size}`}>
+                    {size}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -246,7 +284,7 @@ export default function Apps() {
           </div>
           <div className="flex w-[100px] items-center justify-center text-sm font-medium">
             Page {table.getState().pagination.pageIndex + 1} of{" "}
-            {table.getPageCount()}
+            {table.getPageCount() || 1}
           </div>
           <div className="flex items-center space-x-2">
             <Button
@@ -262,7 +300,7 @@ export default function Apps() {
               variant="outline"
               className="h-8 w-8 p-0"
               disabled={!table.getCanPreviousPage()}
-              onClick={table.previousPage}
+              onClick={() => table.previousPage()}
             >
               <span className="sr-only">Go to previous page</span>
               <ChevronLeftIcon className="h-4 w-4" />
@@ -271,7 +309,7 @@ export default function Apps() {
               variant="outline"
               className="h-8 w-8 p-0"
               disabled={!table.getCanNextPage()}
-              onClick={table.nextPage}
+              onClick={() => table.nextPage()}
             >
               <span className="sr-only">Go to next page</span>
               <ChevronRightIcon className="h-4 w-4" />

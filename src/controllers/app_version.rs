@@ -1,30 +1,16 @@
 #![allow(clippy::missing_errors_doc)]
 #![allow(clippy::unnecessary_struct_initialization)]
 #![allow(clippy::unused_async)]
+use axum::{debug_handler, extract::Query};
 use loco_rs::prelude::*;
-use serde::{Deserialize, Serialize};
-use axum::debug_handler;
 
-use crate::models::_entities::app_versions::{ActiveModel, Entity, Model};
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Params {
-    pub version_code: String,
-    pub version_name: String,
-    pub release_notes: Option<String>,
-    pub apk_file_id: Option<i32>,
-    pub published_at: Option<DateTimeWithTimeZone>,
-    }
-
-impl Params {
-    fn update(&self, item: &mut ActiveModel) {
-      item.version_code = Set(self.version_code.clone());
-      item.version_name = Set(self.version_name.clone());
-      item.release_notes = Set(self.release_notes.clone());
-      item.apk_file_id = Set(self.apk_file_id.clone());
-      item.published_at = Set(self.published_at.clone());
-      }
-}
+use crate::{
+    models::{
+        _entities::app_versions::{Entity, Model},
+        app_versions::{ActiveModel, AppVersionQuery, CreateAppVersion},
+    },
+    views::api_response::{ApiResponse, PagedApiResponse},
+};
 
 async fn load_item(ctx: &AppContext, id: i32) -> Result<Model> {
     let item = Entity::find_by_id(id).one(&ctx.db).await?;
@@ -32,25 +18,28 @@ async fn load_item(ctx: &AppContext, id: i32) -> Result<Model> {
 }
 
 #[debug_handler]
-pub async fn list(State(ctx): State<AppContext>) -> Result<Response> {
-    format::json(Entity::find().all(&ctx.db).await?)
+pub async fn list(
+    State(ctx): State<AppContext>,
+    Query(query): Query<AppVersionQuery>,
+) -> Result<PagedApiResponse<Model>> {
+    let res = Model::query(&ctx.db, &query).await?;
+    Ok(res.into())
 }
 
 #[debug_handler]
-pub async fn add(State(ctx): State<AppContext>, Json(params): Json<Params>) -> Result<Response> {
-    let mut item = ActiveModel {
-        ..Default::default()
-    };
-    params.update(&mut item);
-    let item = item.insert(&ctx.db).await?;
-    format::json(item)
+pub async fn add(
+    State(ctx): State<AppContext>,
+    JsonValidateWithMessage(data): JsonValidateWithMessage<CreateAppVersion>,
+) -> Result<ApiResponse<Model, ()>> {
+    let res = ActiveModel::create(&ctx.db, &data).await?;
+    Ok(ApiResponse::ok(res, None))
 }
 
 #[debug_handler]
 pub async fn update(
     Path(id): Path<i32>,
     State(ctx): State<AppContext>,
-    Json(params): Json<Params>,
+    Json(params): Json<CreateAppVersion>,
 ) -> Result<Response> {
     let item = load_item(&ctx, id).await?;
     let mut item = item.into_active_model();

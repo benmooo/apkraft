@@ -2,8 +2,8 @@ import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
-import { z } from "zod";
-import { ArrowLeftIcon, UploadIcon } from "lucide-react";
+import { z, ZodNull } from "zod";
+import { ArrowLeftIcon, LoaderIcon, PlusIcon, UploadIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,62 +29,58 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-
-// Create a schema for app version creation that matches app_versions.rs
-const createAppVersionSchema = z.object({
-  app_id: z.string({
-    required_error: "Please select an app",
-  }),
-  version_code: z
-    .string()
-    .min(1, {
-      message: "Version code is required",
-    })
-    .regex(/^\d+$/, {
-      message: "Version code must be a number",
-    }),
-  version_name: z
-    .string()
-    .min(1, {
-      message: "Version name is required",
-    })
-    .regex(/^\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?$/, {
-      message: "Please use semantic versioning (e.g., 1.0.0 or 1.0.0-beta.1)",
-    }),
-  release_notes: z.string().optional(),
-  publish_immediately: z.boolean(),
-});
-
-// Create the form type using infer
-type CreateAppVersionFormValues = z.infer<typeof createAppVersionSchema>;
+import {
+  ApiResponse,
+  App,
+  AppVersion,
+  CreateAppVersion,
+  createAppVersionSchema,
+  PagedResponse,
+} from "@/schemas";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { usePagination } from "@/hooks/use-pagination";
+import client from "@/lib/client";
+import LoadingSpinner from "@/components/loading-spinner";
+import { useFileUpload } from "@/hooks/use-file-upload";
+import { queryClient } from "@/index";
 
 // Default values
-const defaultValues: Partial<CreateAppVersionFormValues> = {
-  app_id: "",
+const defaultValues: Partial<CreateAppVersion> = {
   version_code: "",
   version_name: "",
   release_notes: "",
   publish_immediately: false,
 };
 
-// Mock apps for selection
-const mockApps = [
-  { id: "1", name: "APKraft Manager", bundle_id: "com.apkraft.manager" },
-  { id: "2", name: "APKraft Dashboard", bundle_id: "com.apkraft.dashboard" },
-  { id: "3", name: "APKraft Mobile", bundle_id: "com.apkraft.mobile" },
-];
-
 export default function CreateAppVersionPage() {
   const navigate = useNavigate();
 
   // State for file upload
   const [file, setFile] = React.useState<File | null>(null);
-  const [isUploading, setIsUploading] = React.useState(false);
-  const [uploadProgress, setUploadProgress] = React.useState(0);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const {
+    uploading,
+    progress,
+    uploadFile,
+    data: uploadResponse,
+    error: uploadError,
+  } = useFileUpload();
+
+  const { pagination, onPaginationChange } = usePagination(1000);
+  const { pageIndex, pageSize } = pagination;
+
+  const { data, isError, isLoading, error } = useQuery({
+    queryKey: ["apps", pageIndex, pageSize],
+    queryFn: async () =>
+      (
+        await client.get("/apps", {
+          params: { page: pageIndex + 1, page_size: pageSize },
+        })
+      ).data as PagedResponse<App>,
+  });
 
   // Initialize the form
-  const form = useForm<CreateAppVersionFormValues>({
+  const form = useForm<CreateAppVersion>({
     resolver: zodResolver(createAppVersionSchema),
     defaultValues,
     mode: "onChange",
@@ -101,54 +97,31 @@ export default function CreateAppVersionPage() {
     fileInputRef.current?.click();
   };
 
-  // Simulate file upload progress
-  const simulateUpload = () => {
-    if (!file) return;
-
-    setIsUploading(true);
-    setUploadProgress(0);
-
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsUploading(false);
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 500);
-
-    return () => clearInterval(interval);
+  const createAppVersion = async (app: CreateAppVersion) => {
+    const { data } = await client.post("/app_versions", app);
+    return data as ApiResponse<AppVersion, undefined>;
   };
 
+  const mutation = useMutation({
+    mutationFn: createAppVersion,
+    onSuccess(data) {
+      toast("App created", {
+        description: `Successfully created ${data.data?.version_name}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["app-versions"] });
+      navigate(-1);
+    },
+    onError(error) {
+      toast("Error creating app version", {
+        description: error.message,
+      });
+    },
+  });
+
   // Handle form submission
-  function onSubmit(data: CreateAppVersionFormValues) {
-    if (!file) {
-      toast("Error", {
-        description: "Please upload an APK file",
-      });
-      return;
-    }
-
-    // In a real app, you would send the form data and file to your API
-    console.log("Form data:", data);
-    console.log("File:", file);
-
-    // Simulate file upload
-    simulateUpload();
-
-    // Show success toast after "upload" completes
-    setTimeout(() => {
-      toast("Version created", {
-        description: `Version ${data.version_name} created successfully${data.publish_immediately ? " and published" : ""}.`,
-      });
-
-      // Navigate back to the versions list
-      setTimeout(() => {
-        navigate("/admin/app-versions");
-      }, 1000);
-    }, 5500); // After upload simulation completes
+  function onSubmit(data: CreateAppVersion) {
+    console.log(data)
+    mutation.mutate(data);
   }
 
   return (
@@ -158,7 +131,7 @@ export default function CreateAppVersionPage() {
           variant="ghost"
           size="icon"
           className="mr-2"
-          onClick={() => navigate("/admin/app-versions")}
+          onClick={() => navigate(-1)}
         >
           <ArrowLeftIcon className="h-4 w-4" />
         </Button>
@@ -183,8 +156,7 @@ export default function CreateAppVersionPage() {
                     <FormItem>
                       <FormLabel>Select App</FormLabel>
                       <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        onValueChange={(val) => field.onChange(Number(val))}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -192,16 +164,29 @@ export default function CreateAppVersionPage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {mockApps.map((app) => (
-                            <SelectItem key={app.id} value={app.id}>
-                              <div className="flex items-center gap-2">
-                                {app.name}
-                                <Badge variant="outline" className="text-xs">
-                                  {app.bundle_id}
-                                </Badge>
-                              </div>
-                            </SelectItem>
-                          ))}
+                          {(() => {
+                            if (isError)
+                              return (
+                                <SelectItem value="error" disabled>
+                                  {error?.toString()}
+                                </SelectItem>
+                              );
+                            if (isLoading) return <LoadingSpinner />;
+
+                            return data?.data?.map((app) => (
+                              <SelectItem
+                                key={app.id}
+                                value={app.id.toString()}
+                              >
+                                <div className="flex items-center gap-2">
+                                  {app.name}
+                                  <Badge variant="outline" className="text-xs">
+                                    {app.bundle_id}
+                                  </Badge>
+                                </div>
+                              </SelectItem>
+                            ));
+                          })()}
                         </SelectContent>
                       </Select>
                       <FormDescription>
@@ -315,13 +300,13 @@ export default function CreateAppVersionPage() {
                       </div>
                     </div>
 
-                    {isUploading && (
+                    {uploading && (
                       <div className="mt-4 space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <span>Uploading...</span>
-                          <span>{uploadProgress}%</span>
+                          <span>{progress}%</span>
                         </div>
-                        <Progress value={uploadProgress} />
+                        <Progress value={progress} />
                       </div>
                     )}
                   </div>
@@ -359,8 +344,13 @@ export default function CreateAppVersionPage() {
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={isUploading}>
-                    {isUploading ? "Uploading..." : "Create Version"}
+                  <Button type="submit" disabled={mutation.isPending}>
+                    {!mutation.isPending ? (
+                      <PlusIcon />
+                    ) : (
+                      <LoaderIcon className="animate-spin" />
+                    )}
+                    {mutation.isPending ? "Creating..." : "Create App Version"}
                   </Button>
                 </div>
               </form>

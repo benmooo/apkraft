@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const AppSchema = z.object({
+export const appSchema = z.object({
   id: z.number(),
   name: z.string(),
   bundle_id: z.string(),
@@ -11,7 +11,7 @@ export const AppSchema = z.object({
   updated_at: z.string(),
 });
 
-export type App = z.infer<typeof AppSchema>;
+export type App = z.infer<typeof appSchema>;
 
 export const createAppSchema = z.object({
   name: z.string().min(2, {
@@ -30,7 +30,7 @@ export const createAppSchema = z.object({
   platform_id: z.number(),
 });
 
-export type CreateAppFormValues = z.infer<typeof createAppSchema>;
+export type CreateApp = z.infer<typeof createAppSchema>;
 
 export const FileSchema = z.object({
   created_at: z.string().datetime(), // ISO datetime string
@@ -49,12 +49,68 @@ export namespace Models {
   export type File = z.infer<typeof FileSchema>;
 }
 
-export type Pagination<T> = {
-  results: T[];
-  pagination: {
-    page: number;
-    page_size: number;
-    total_items: number;
-    total_pages: number;
-  };
+export type ApiResponse<T, I> = {
+  code: number;
+  data?: T;
+  info?: I;
+  error?: string;
 };
+
+export type PageMeta = {
+  total_items: number;
+  total_pages: number;
+};
+
+export type PagedResponse<T> = ApiResponse<Array<T>, PageMeta>;
+
+export const createAppVersionSchema = z.object({
+  app_id: z.number({
+    required_error: "Please select an app",
+  }),
+  version_code: z
+    .string()
+    .min(1, {
+      message: "Version code is required",
+    })
+    .regex(/^\d+$/, {
+      message: "Version code must be a number",
+    }),
+  version_name: z
+    .string()
+    .min(1, {
+      message: "Version name is required",
+    })
+    .regex(/^\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?$/, {
+      message: "Please use semantic versioning (e.g., 1.0.0 or 1.0.0-beta.1)",
+    }),
+  release_notes: z.string().optional(),
+  publish_immediately: z.boolean(),
+});
+// Create the form type using infer
+export type CreateAppVersion = z.infer<typeof createAppVersionSchema>;
+
+// Schema for the AppVersion model
+export const appVersionSchema = z.object({
+  id: z.number(),
+  version_code: z.string(),
+  version_name: z.string(),
+  release_notes: z.string().nullable(),
+  published_at: z.string().nullable(),
+  app_id: z.number(),
+  apk_file_id: z.number(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+
+export type AppVersion = z.infer<typeof appVersionSchema>;
+
+// Pagination wrapper schema
+export const PaginationSchema = z.object({
+  pagination: z.object({
+    total_items: z.number(),
+    total_pages: z.number(),
+    current_page: z.number(),
+    page_size: z.number(),
+  }),
+  results: z.array(z.any()),
+});
