@@ -43,6 +43,7 @@ import client from "@/lib/client";
 import LoadingSpinner from "@/components/loading-spinner";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { queryClient } from "@/index";
+import { useEffect } from "react";
 
 // Default values
 const defaultValues: Partial<CreateAppVersion> = {
@@ -89,13 +90,23 @@ export default function CreateAppVersionPage() {
   // Handle file selection
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0] || null;
-    setFile(selectedFile);
+    if (selectedFile) {
+      setFile(selectedFile);
+      uploadFile(selectedFile);
+    }
   };
 
   // Handle file upload button click
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
+
+  useEffect(() => {
+    if (uploadResponse) {
+      form.setValue("apk_file_id", uploadResponse.id);
+      form.trigger("apk_file_id");
+    }
+  }, [uploadResponse]);
 
   const createAppVersion = async (app: CreateAppVersion) => {
     const { data } = await client.post("/app_versions", app);
@@ -120,7 +131,6 @@ export default function CreateAppVersionPage() {
 
   // Handle form submission
   function onSubmit(data: CreateAppVersion) {
-    console.log(data)
     mutation.mutate(data);
   }
 

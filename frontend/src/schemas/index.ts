@@ -83,6 +83,9 @@ export const createAppVersionSchema = z.object({
     .regex(/^\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?$/, {
       message: "Please use semantic versioning (e.g., 1.0.0 or 1.0.0-beta.1)",
     }),
+  apk_file_id: z.number({
+    required_error: "Please upload an APK file",
+  }),
   release_notes: z.string().optional(),
   publish_immediately: z.boolean(),
 });

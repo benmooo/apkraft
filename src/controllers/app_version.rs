@@ -9,7 +9,10 @@ use crate::{
         _entities::app_versions::{Entity, Model},
         app_versions::{ActiveModel, AppVersionQuery, CreateAppVersion},
     },
-    views::api_response::{ApiResponse, PagedApiResponse},
+    views::{
+        api_response::{ApiResponse, PagedApiResponse},
+        api_result::AppError,
+    },
 };
 
 async fn load_item(ctx: &AppContext, id: i32) -> Result<Model> {
@@ -29,8 +32,8 @@ pub async fn list(
 #[debug_handler]
 pub async fn add(
     State(ctx): State<AppContext>,
-    JsonValidateWithMessage(data): JsonValidateWithMessage<CreateAppVersion>,
-) -> Result<ApiResponse<Model, ()>> {
+    axum::Json(data): axum::Json<CreateAppVersion>,
+) -> std::result::Result<ApiResponse<Model, ()>, AppError> {
     let res = ActiveModel::create(&ctx.db, &data).await?;
     Ok(ApiResponse::ok(res, None))
 }

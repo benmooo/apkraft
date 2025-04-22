@@ -1,25 +1,30 @@
-// use axum::{http::{Response, StatusCode}, response::IntoResponse};
+use axum::{
+    response::{IntoResponse, Response},
+    Json,
+};
+use loco_rs::Error as LocoError;
+use serde_json::json;
 
-// pub struct MyError(loco_rs::Error);
+pub struct AppError(pub LocoError);
 
-// impl IntoResponse for MyError {
-//     fn into_response(self) -> Response {
-//         let status = match &self.0 {
-//             loco_rs::Error::JsonRejection(_) => StatusCode::BAD_REQUEST,
-//             _ => StatusCode::INTERNAL_SERVER_ERROR,
-//         };
+impl From<LocoError> for AppError {
+    fn from(err: LocoError) -> Self {
+        AppError(err)
+    }
+}
 
-//         let body = json!({
-//             "error": self.0.to_string(),
-//             "details": format!("{:?}", self.0), // 调试详情
-//         });
-
-//         (status, Json(body)).into_response()
-//     }
-// }
-
-// // 使用示例
-// async fn handler() -> Result<Json<Data>, MyError> {
-//     let data = do_something().map_err(MyError)?;
-//     Ok(Json(data))
-// }
+impl IntoResponse for AppError {
+    fn into_response(self) -> Response {
+        match self.0 {
+            LocoError::JsonRejection(err) => {
+                tracing::debug!(err = err.body_text(), "Overridden json rejection");
+                (
+                    err.status(),
+                    Json(json!({"error": "bad request", "description": err.body_text()})),
+                )
+                    .into_response()
+            }
+            other_error => other_error.into_response(), // Fallback to the original implementation
+        }
+    }
+}

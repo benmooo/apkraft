@@ -56,8 +56,8 @@ impl ActiveModel {
             .is_some()
         {
             return Err(loco_rs::Error::BadRequest(format!(
-                "version {} with build number {} already exists!",
-                data.version_name, data.version_code
+                "app {} with version {} and build number {} already exists!",
+                data.app_id, data.version_name, data.version_code
             )));
         }
 

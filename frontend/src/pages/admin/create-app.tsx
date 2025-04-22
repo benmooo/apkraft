@@ -103,6 +103,7 @@ export default function CreateAppPage() {
     if (data) {
       // update form data
       form.setValue("icon_file_id", data.id);
+      form.trigger("icon_file_id");
     }
   }, [data]);
 

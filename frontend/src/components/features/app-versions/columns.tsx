@@ -91,19 +91,19 @@ export const appVersionColumns: ColumnDef<AppVersion>[] = [
           variant="outline"
           className="bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-500 dark:border-yellow-800/30"
         >
-          Draft
+          Candidate
         </Badge>
       );
     },
   },
   {
     id: "apk_file_id",
-    header: () => <div className="text-right"></div>,
+    header: () => <div className="text-right">APK File ID</div>,
     cell: ({ row }) => {
       const version = row.original;
       return (
         <div className="text-right">
-          <span className="font-mono">{formatFileSize(version.apk_file_id)}</span>
+          <span className="font-mono">{version.apk_file_id}</span>
         </div>
       );
     },
@@ -133,7 +133,7 @@ export const appVersionColumns: ColumnDef<AppVersion>[] = [
             >
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {}}>
               <DownloadIcon className="mr-2 h-4 w-4" />
               Download APK
             </DropdownMenuItem>
