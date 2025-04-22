@@ -107,7 +107,7 @@ pub async fn serve_file(
 ) -> Result<Response> {
     // Find the file in the database by path
     let file = Entity::find()
-        .filter(files::Column::Path.eq(key.clone()))
+        .filter(files::Column::Path.eq(&key))
         .one(&ctx.db)
         .await?
         .ok_or_else(|| Error::NotFound)?;

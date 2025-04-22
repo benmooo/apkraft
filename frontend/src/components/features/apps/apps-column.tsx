@@ -1,3 +1,4 @@
+import LoadingSpinner from "@/components/loading-spinner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -8,11 +9,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { queryClient } from "@/index";
+import client from "@/lib/client";
 import { App } from "@/schemas";
+import { useMutation } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { MoreVerticalIcon } from "lucide-react";
+import { DeleteIcon, MoreVerticalIcon } from "lucide-react";
 import { Link } from "react-router";
+import { toast } from "sonner";
 
 // Define columns for the data table
 export const appColumns: ColumnDef<App>[] = [
@@ -76,9 +81,9 @@ export const appColumns: ColumnDef<App>[] = [
     cell: ({ row }) => {
       const description = row.original.description;
       return (
-        description || (
-          <span className="text-muted-foreground text-sm">No description</span>
-        )
+        <div className="text-muted-foreground text-sm max-w-md text-wrap">
+          {description || "No description"}
+        </div>
       );
     },
   },
@@ -113,6 +118,31 @@ export const appColumns: ColumnDef<App>[] = [
     id: "actions",
     cell: ({ row }) => {
       const app = row.original;
+
+      const deleteApp = async (appId: number) => {
+        const { data } = await client.delete(`/apps/${appId}`);
+        return data;
+      };
+
+      const mutation = useMutation({
+        mutationFn: deleteApp,
+        onSuccess: (_) => {
+          toast("App deleted", {
+            description: `${app.name} has been deleted successfully.`,
+          });
+          queryClient.invalidateQueries({ queryKey: ["apps"] });
+        },
+        onError: (error) => {
+          toast("Error deleting app", {
+            description: error.message,
+          });
+        },
+      });
+
+      const onDelete = () => {
+        mutation.mutate(app.id);
+      };
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -121,7 +151,11 @@ export const appColumns: ColumnDef<App>[] = [
               className="flex h-8 w-8 p-0 data-[state=open]:bg-muted"
               size="icon"
             >
-              <MoreVerticalIcon className="h-4 w-4" />
+              {mutation.isPending ? (
+                <LoadingSpinner />
+              ) : (
+                <MoreVerticalIcon className="h-4 w-4" />
+              )}
               <span className="sr-only">Open menu</span>
             </Button>
           </DropdownMenuTrigger>
@@ -135,13 +169,8 @@ export const appColumns: ColumnDef<App>[] = [
             </Link>
 
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-destructive"
-              onClick={() => {
-                // Implement delete functionality
-                console.log(`Delete app ${app.id}`);
-              }}
-            >
+            <DropdownMenuItem className="text-destructive" onClick={onDelete}>
+              <DeleteIcon />
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>

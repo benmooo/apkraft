@@ -10,10 +10,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { DownloadIcon, ExternalLinkIcon, MoreVerticalIcon } from "lucide-react";
-import { Link, useNavigate } from "react-router";
+import {
+  DownloadIcon,
+  ExternalLinkIcon,
+  MoreVerticalIcon,
+  Trash2Icon,
+} from "lucide-react";
+import { useNavigate } from "react-router";
 import { AppVersion } from "@/schemas";
-import { formatFileSize } from "@/lib/utils";
+import { downloadFile } from "@/lib/utils";
+import { useDeleteAppVersion } from "@/hooks/use-delete-app-version";
+import { usePublishAppVersion } from "@/hooks/use-publish-app-version";
+import LoadingSpinner from "@/components/loading-spinner";
+import { defaultDateTimeFormat } from "@/lib/config";
 
 // Define columns for the data table
 export const appVersionColumns: ColumnDef<AppVersion>[] = [
@@ -56,13 +65,6 @@ export const appVersionColumns: ColumnDef<AppVersion>[] = [
               {version.version_code}
             </Badge>
           </div>
-          <div className="text-sm text-muted-foreground mt-1">
-            {version.release_notes ? (
-              <div className="line-clamp-1">{version.release_notes}</div>
-            ) : (
-              <span className="italic">No release notes</span>
-            )}
-          </div>
         </div>
       );
     },
@@ -85,7 +87,7 @@ export const appVersionColumns: ColumnDef<AppVersion>[] = [
     cell: ({ row }) => {
       const version = row.original;
       return version.published_at ? (
-        format(new Date(version.published_at), "MMM dd, yyyy")
+        format(new Date(version.published_at), defaultDateTimeFormat)
       ) : (
         <Badge
           variant="outline"
@@ -96,6 +98,19 @@ export const appVersionColumns: ColumnDef<AppVersion>[] = [
       );
     },
   },
+  {
+    id: "releaseNotes",
+    header: "Release Notes",
+    cell: ({ row }) => {
+      const version = row.original;
+      return (
+        <div className="text-sm text-muted-foreground text-wrap max-w-md">
+          {version.release_notes || "No release notes"}
+        </div>
+      );
+    },
+  },
+
   {
     id: "apk_file_id",
     header: () => <div className="text-right">APK File ID</div>,
@@ -114,11 +129,26 @@ export const appVersionColumns: ColumnDef<AppVersion>[] = [
       const version = row.original;
       const navigate = useNavigate();
 
+      const deleteAppVersion = useDeleteAppVersion(version.id);
+      const onDelete = () => {
+        deleteAppVersion.mutate();
+      };
+
+      const publishAppVersion = usePublishAppVersion(version.id);
+
+      const onPublish = () => {
+        publishAppVersion.mutate();
+      };
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
-              <MoreVerticalIcon className="h-4 w-4" />
+              {deleteAppVersion.isPending || publishAppVersion.isPending ? (
+                <LoadingSpinner />
+              ) : (
+                <MoreVerticalIcon className="h-4 w-4" />
+              )}
               <span className="sr-only">Open menu</span>
             </Button>
           </DropdownMenuTrigger>
@@ -133,23 +163,19 @@ export const appVersionColumns: ColumnDef<AppVersion>[] = [
             >
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => {}}>
+            <DropdownMenuItem onClick={() => downloadFile(version.apk_file_id)}>
               <DownloadIcon className="mr-2 h-4 w-4" />
               Download APK
             </DropdownMenuItem>
             {!version.published_at && (
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={onPublish}>
                 <ExternalLinkIcon className="mr-2 h-4 w-4" />
                 Publish
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-destructive"
-              onClick={() => {
-                console.log(`Delete version ${version.id}`);
-              }}
-            >
+            <DropdownMenuItem className="text-destructive" onClick={onDelete}>
+              <Trash2Icon className="text-destructive"></Trash2Icon>
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>

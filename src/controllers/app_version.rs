@@ -7,7 +7,7 @@ use loco_rs::prelude::*;
 use crate::{
     models::{
         _entities::app_versions::{Entity, Model},
-        app_versions::{ActiveModel, AppVersionQuery, CreateAppVersion},
+        app_versions::{ActiveModel, AppVersionQuery, CreateAppVersion, PatchAppVersion},
     },
     views::{
         api_response::{ApiResponse, PagedApiResponse},
@@ -42,7 +42,7 @@ pub async fn add(
 pub async fn update(
     Path(id): Path<i32>,
     State(ctx): State<AppContext>,
-    Json(params): Json<CreateAppVersion>,
+    axum::Json(params): axum::Json<PatchAppVersion>,
 ) -> Result<Response> {
     let item = load_item(&ctx, id).await?;
     let mut item = item.into_active_model();

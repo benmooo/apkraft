@@ -1,8 +1,10 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
+export const baseUrl = "http://localhost:5150/api";
+
 // Create a custom axios instance
 const client: AxiosInstance = axios.create({
-  baseURL: "http://localhost:5150/api",
+  baseURL: baseUrl,
 });
 
 // Request interceptor

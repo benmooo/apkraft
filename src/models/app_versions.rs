@@ -113,3 +113,28 @@ impl CreateAppVersion {
         item.published_at = Set(self.published_at.clone());
     }
 }
+
+#[derive(Clone, Debug, Serialize, Deserialize, Validate)]
+pub struct PatchAppVersion {
+    pub version_code: Option<String>,
+    pub version_name: Option<String>,
+    pub release_notes: Option<String>,
+    pub published_at: Option<DateTimeWithTimeZone>,
+}
+
+impl PatchAppVersion {
+    pub fn update(&self, item: &mut ActiveModel) {
+        self.version_code
+            .as_ref()
+            .inspect(|&code| item.version_code = Set(code.clone()));
+        self.version_name
+            .as_ref()
+            .inspect(|&name| item.version_name = Set(name.clone()));
+        self.release_notes
+            .as_ref()
+            .inspect(|&notes| item.release_notes = Set(Some(notes.clone())));
+        self.published_at
+            .as_ref()
+            .inspect(|&date| item.published_at = Set(Some(date.clone())));
+    }
+}

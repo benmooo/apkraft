@@ -19,9 +19,8 @@ import {
   ChevronsRightIcon,
   ColumnsIcon,
   PlusIcon,
-  FilterIcon,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router";
+import {  useNavigate } from "react-router";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -48,10 +47,9 @@ import {
 } from "@/components/ui/table";
 import { useQuery } from "@tanstack/react-query";
 import client from "@/lib/client";
-import withFullWidthTableRow from "@/lib/hoc/with-full-width-table-row";
-import LoadingSpinner from "@/components/loading-spinner";
-import EmptyData from "@/components/empty-data";
-import ErrorRetry from "@/components/error-retry";
+
+
+
 import { usePagination } from "@/hooks/use-pagination";
 import { AppVersion, PagedResponse } from "@/schemas";
 import { appVersionColumns } from "./columns";
@@ -156,7 +154,7 @@ export default function AppVersionsTable() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="-">All Apps</SelectItem>
-                  {[].map((app, index) => (
+                  {[].map((_, index) => (
                     <SelectItem key={index} value={"df"}>
                       {""}
                     </SelectItem>

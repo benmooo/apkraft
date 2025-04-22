@@ -2,7 +2,6 @@ import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
-import { z, ZodNull } from "zod";
 import { ArrowLeftIcon, LoaderIcon, PlusIcon, UploadIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -64,10 +63,10 @@ export default function CreateAppVersionPage() {
     progress,
     uploadFile,
     data: uploadResponse,
-    error: uploadError,
+    error: _uploadError,
   } = useFileUpload();
 
-  const { pagination, onPaginationChange } = usePagination(1000);
+  const { pagination, onPaginationChange: _ } = usePagination(1000);
   const { pageIndex, pageSize } = pagination;
 
   const { data, isError, isLoading, error } = useQuery({

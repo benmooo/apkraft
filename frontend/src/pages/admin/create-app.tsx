@@ -55,7 +55,7 @@ export default function CreateAppPage() {
 
   const [file, setFile] = React.useState<File | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const { uploading, progress, uploadFile, data, error } = useFileUpload();
+  const { uploading, progress, uploadFile, data, error: _ } = useFileUpload();
 
   // Initialize the form
   const form = useForm<CreateApp>({
