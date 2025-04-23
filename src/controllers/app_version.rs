@@ -7,7 +7,9 @@ use loco_rs::prelude::*;
 use crate::{
     models::{
         _entities::app_versions::{Entity, Model},
-        app_versions::{ActiveModel, AppVersionQuery, CreateAppVersion, PatchAppVersion},
+        app_versions::{
+            ActiveModel, AppVersionQuery, CreateAppVersion, PatchAppVersion, PublishPayload,
+        },
     },
     views::{
         api_response::{ApiResponse, PagedApiResponse},
@@ -52,6 +54,16 @@ pub async fn update(
 }
 
 #[debug_handler]
+pub async fn publish(
+    State(ctx): State<AppContext>,
+    Path(id): Path<i32>,
+    axum::Json(payload): axum::Json<PublishPayload>,
+) -> Result<Response> {
+    ActiveModel::publish(&ctx.db, id, payload.publish).await?;
+    format::empty()
+}
+
+#[debug_handler]
 pub async fn remove(Path(id): Path<i32>, State(ctx): State<AppContext>) -> Result<Response> {
     load_item(&ctx, id).await?.delete(&ctx.db).await?;
     format::empty()
@@ -64,11 +76,12 @@ pub async fn get_one(Path(id): Path<i32>, State(ctx): State<AppContext>) -> Resu
 
 pub fn routes() -> Routes {
     Routes::new()
-        .prefix("api/app_versions/")
+        .prefix("api/app-versions/")
         .add("/", get(list))
         .add("/", post(add))
         .add("{id}", get(get_one))
         .add("{id}", delete(remove))
         .add("{id}", put(update))
         .add("{id}", patch(update))
+        .add("{id}/publish", post(publish))
 }

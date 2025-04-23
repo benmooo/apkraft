@@ -1,9 +1,9 @@
 use crate::utils::ConditionBuilderExt;
-use loco_rs::{model::query::paginate, Result};
+use loco_rs::{model::query::paginate, Error, Result};
 use validator::Validate;
 
 pub use super::_entities::apps::{ActiveModel, Entity, Model};
-use super::{_entities::apps, common::ToCondition};
+use super::{_entities::apps, app_versions, common::ToCondition, files};
 use loco_rs::model::query::{self, PageResponse, PaginationQuery};
 use sea_orm::{entity::prelude::*, ActiveValue::Set, Condition, QueryOrder};
 use serde::{Deserialize, Serialize};
@@ -36,6 +36,46 @@ impl Model {
             &query.pagination,
         )
         .await
+    }
+
+    pub async fn check_update(
+        db: &DatabaseConnection,
+        id: i32,
+        revision: &Revision,
+    ) -> Result<UpdateInfo> {
+        // find current app version id
+        let app = Entity::find_by_id(id)
+            .find_also_related(app_versions::Entity)
+            .one(db)
+            .await?
+            .ok_or(Error::NotFound)?;
+
+        // if version is not found which means there is no current version we just return no updates
+        if app.1.is_none() {
+            return Ok(UpdateInfo::default());
+        }
+        let version = app.1.unwrap();
+        if revision.version_name != version.version_name
+            || revision.build_number.to_string() != version.version_code
+        {
+            let file = version
+                .find_related(files::Entity)
+                .one(db)
+                .await?
+                .ok_or(Error::NotFound)?;
+
+            return Ok(UpdateInfo::new(
+                true,
+                Some(LatestVersionInfo {
+                    id: version.id,
+                    name: version.version_name,
+                    build_number: version.version_code,
+                    file_url: file.path,
+                }),
+            ));
+        }
+
+        Ok(UpdateInfo::default())
     }
 }
 
@@ -112,5 +152,34 @@ impl CreateApp {
         item.current_version_id = Set(self.current_version_id.clone());
         item.description = Set(self.description.clone());
         item.platform_id = Set(self.platform_id);
+    }
+}
+
+#[derive(Deserialize)]
+pub struct Revision {
+    pub version_name: String,
+    pub build_number: usize,
+}
+
+#[derive(Serialize, Default)]
+pub struct UpdateInfo {
+    pub update_available: bool,
+    pub latest_version: Option<LatestVersionInfo>,
+}
+
+#[derive(Serialize)]
+pub struct LatestVersionInfo {
+    pub id: i32,
+    pub name: String,
+    pub build_number: String,
+    pub file_url: String,
+}
+
+impl UpdateInfo {
+    pub fn new(update_available: bool, latest_version: Option<LatestVersionInfo>) -> Self {
+        Self {
+            update_available,
+            latest_version,
+        }
     }
 }

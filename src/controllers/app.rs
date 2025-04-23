@@ -7,7 +7,7 @@ use loco_rs::prelude::*;
 use crate::{
     models::{
         _entities::apps::{ActiveModel, Entity, Model},
-        apps::{AppQuery, CreateApp},
+        apps::{AppQuery, CreateApp, Revision},
     },
     views::api_response::PagedApiResponse,
 };
@@ -55,6 +55,16 @@ pub async fn remove(Path(id): Path<i32>, State(ctx): State<AppContext>) -> Resul
 }
 
 #[debug_handler]
+pub async fn check_update(
+    State(ctx): State<AppContext>,
+    Path(id): Path<i32>,
+    Query(revision): Query<Revision>,
+) -> Result<Response> {
+    let res = Model::check_update(&ctx.db, id, &revision).await?;
+    format::json(res)
+}
+
+#[debug_handler]
 pub async fn get_one(Path(id): Path<i32>, State(ctx): State<AppContext>) -> Result<Response> {
     format::json(load_item(&ctx, id).await?)
 }
@@ -68,4 +78,5 @@ pub fn routes() -> Routes {
         .add("{id}", delete(remove))
         .add("{id}", put(update))
         .add("{id}", patch(update))
+        .add("{id}/check-update", get(check_update))
 }

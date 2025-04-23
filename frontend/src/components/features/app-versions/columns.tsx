@@ -15,6 +15,7 @@ import {
   ExternalLinkIcon,
   MoreVerticalIcon,
   Trash2Icon,
+  Unlink,
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import { AppVersion } from "@/schemas";
@@ -134,7 +135,8 @@ export const appVersionColumns: ColumnDef<AppVersion>[] = [
         deleteAppVersion.mutate();
       };
 
-      const publishAppVersion = usePublishAppVersion(version.id);
+      const published = Boolean(version.published_at);
+      const publishAppVersion = usePublishAppVersion(version.id, !published);
 
       const onPublish = () => {
         publishAppVersion.mutate();
@@ -167,12 +169,16 @@ export const appVersionColumns: ColumnDef<AppVersion>[] = [
               <DownloadIcon className="mr-2 h-4 w-4" />
               Download APK
             </DropdownMenuItem>
-            {!version.published_at && (
+            {
               <DropdownMenuItem onClick={onPublish}>
-                <ExternalLinkIcon className="mr-2 h-4 w-4" />
-                Publish
+                {version.published_at ? (
+                  <Unlink className="mr-2 h-4 w-4" />
+                ) : (
+                  <ExternalLinkIcon className="mr-2 h-4 w-4" />
+                )}
+                {version.published_at ? "Unpublish" : "Publish"}
               </DropdownMenuItem>
-            )}
+            }
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-destructive" onClick={onDelete}>
               <Trash2Icon className="text-destructive"></Trash2Icon>

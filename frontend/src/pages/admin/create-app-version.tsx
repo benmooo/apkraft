@@ -108,7 +108,7 @@ export default function CreateAppVersionPage() {
   }, [uploadResponse]);
 
   const createAppVersion = async (app: CreateAppVersion) => {
-    const { data } = await client.post("/app_versions", app);
+    const { data } = await client.post("/app-versions", app);
     return data as ApiResponse<AppVersion, undefined>;
   };
 

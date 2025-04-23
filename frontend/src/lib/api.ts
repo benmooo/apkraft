@@ -7,13 +7,13 @@ export const getFileInfo = async (fileId: number) => {
 };
 
 export const deleteVersion = async (id: number) => {
-  const { data } = await client.delete(`/app_versions/${id}`);
+  const { data } = await client.delete(`/app-versions/${id}`);
   return data;
 };
 
-export const publishAppVersion = async (id: number) => {
-  const { data } = await client.patch(`/app_versions/${id}`, {
-    published_at: new Date().toISOString(),
+export const publishAppVersion = async (id: number, publish: boolean) => {
+  const { data } = await client.post(`/app-versions/${id}/publish`, {
+    publish,
   });
   return data;
 };

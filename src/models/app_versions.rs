@@ -1,12 +1,16 @@
 use crate::utils::ConditionBuilderExt;
+use chrono::Utc;
 use loco_rs::model::query::{self, paginate, PageResponse, PaginationQuery};
-use loco_rs::Result;
+use loco_rs::{Error, Result};
 use sea_orm::ActiveValue::Set;
+use sea_orm::TransactionTrait;
 use sea_orm::{entity::prelude::*, Condition, QueryOrder};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 pub use super::_entities::app_versions::{ActiveModel, Entity, Model};
+use super::_entities::{app_versions, apps};
+use super::apps::Apps;
 use super::{_entities::app_versions::Column, common::ToCondition};
 pub type AppVersions = Entity;
 
@@ -65,7 +69,60 @@ impl ActiveModel {
             ..Default::default()
         };
         data.update(&mut item);
-        Ok(item.insert(db).await?)
+
+        let tx = db.begin().await?;
+        let version = item.insert(&tx).await?;
+
+        // If publish_immediately is true, update the app's current version ID
+        if data.publish_immediately.unwrap_or(false) {
+            Self::update_current_app_version_id(&tx, version.app_id, Some(version.id)).await?
+        }
+
+        tx.commit().await?;
+        Ok(version)
+    }
+
+    pub async fn publish(db: &DatabaseConnection, id: i32, publish: bool) -> Result<()> {
+        let version = Entity::find_by_id(id)
+            .one(db)
+            .await?
+            .ok_or(Error::NotFound)?;
+        let app_id = version.app_id; // Store app_id before converting to ActiveModel
+        let mut version: app_versions::ActiveModel = version.into();
+
+        // start a transaction
+        let tx = db.begin().await?;
+
+        if publish {
+            version.published_at = Set(Some(Utc::now().fixed_offset()));
+            version.update(&tx).await?;
+            Self::update_current_app_version_id(&tx, app_id, Some(id)).await?
+        } else {
+            version.published_at = Set(None);
+            version.update(&tx).await?;
+            Self::update_current_app_version_id(&tx, app_id, None).await?
+        }
+
+        Ok(tx.commit().await?)
+    }
+
+    pub async fn update_current_app_version_id<C>(
+        db: &C,
+        app_id: i32,
+        version_id: Option<i32>,
+    ) -> Result<()>
+    where
+        C: ConnectionTrait,
+    {
+        let mut app: apps::ActiveModel = Apps::find_by_id(app_id)
+            .one(db)
+            .await?
+            .ok_or(Error::NotFound)?
+            .into();
+
+        app.current_version_id = Set(version_id);
+        app.update(db).await?;
+        Ok(())
     }
 }
 
@@ -100,7 +157,7 @@ pub struct CreateAppVersion {
     pub version_name: String,
     pub release_notes: Option<String>,
     pub apk_file_id: i32,
-    pub published_at: Option<DateTimeWithTimeZone>,
+    pub publish_immediately: Option<bool>,
 }
 
 impl CreateAppVersion {
@@ -110,7 +167,10 @@ impl CreateAppVersion {
         item.version_name = Set(self.version_name.clone());
         item.release_notes = Set(self.release_notes.clone());
         item.apk_file_id = Set(Some(self.apk_file_id.clone()));
-        item.published_at = Set(self.published_at.clone());
+        item.published_at = Set(self
+            .publish_immediately
+            .filter(|&is_pub| is_pub)
+            .map(|_| Utc::now().fixed_offset()));
     }
 }
 
@@ -119,7 +179,6 @@ pub struct PatchAppVersion {
     pub version_code: Option<String>,
     pub version_name: Option<String>,
     pub release_notes: Option<String>,
-    pub published_at: Option<DateTimeWithTimeZone>,
 }
 
 impl PatchAppVersion {
@@ -133,8 +192,10 @@ impl PatchAppVersion {
         self.release_notes
             .as_ref()
             .inspect(|&notes| item.release_notes = Set(Some(notes.clone())));
-        self.published_at
-            .as_ref()
-            .inspect(|&date| item.published_at = Set(Some(date.clone())));
     }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PublishPayload {
+    pub publish: bool,
 }

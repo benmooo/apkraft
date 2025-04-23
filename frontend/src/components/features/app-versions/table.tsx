@@ -75,7 +75,7 @@ export default function AppVersionsTable() {
     queryKey: ["app-versions", pageIndex, pageSize],
     queryFn: async () =>
       (
-        await client.get("/app_versions", {
+        await client.get("/app-versions", {
           params: { page: pageIndex + 1, page_size: pageSize },
         })
       ).data as PagedResponse<AppVersion>,
