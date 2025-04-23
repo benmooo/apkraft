@@ -101,10 +101,3 @@ auth:
     secret: 3hprVIUfUtHssVsyy3qp
     # Token expiration time in seconds
     expiration: 604800 # 7 days
-
-# Storage Configuration
-storage:
-  default:
-    driver: disk
-    options:
-      base_path: "static/uploads"
