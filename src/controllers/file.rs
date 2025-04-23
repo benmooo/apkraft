@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::models::_entities::files::{self, ActiveModel, Entity, Model};
+use crate::views::api_response::PagedApiResponse;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Params {
@@ -30,8 +31,12 @@ async fn load_item(ctx: &AppContext, id: i32) -> Result<Model> {
 }
 
 #[debug_handler]
-pub async fn list(State(ctx): State<AppContext>) -> Result<Response> {
-    format::json(Entity::find().all(&ctx.db).await?)
+pub async fn list(
+    State(ctx): State<AppContext>,
+    Query(query): Query<crate::models::files::FileQuery>,
+) -> Result<PagedApiResponse<Model>> {
+    let res = Model::query(&ctx.db, &query).await?;
+    Ok(res.into())
 }
 
 #[debug_handler]
