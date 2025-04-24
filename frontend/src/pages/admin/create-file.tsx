@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { useNavigate } from "react-router";
-import { z } from "zod";
 import { ArrowLeftIcon, UploadIcon, XIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -13,16 +12,10 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import axios from "axios";
+import client from "@/lib/client";
 
 const supportedFileTypes = ["apk", "jpg", "jpeg", "png", "svg", "webp"];
-
-// file upload validation schema
-const uploadSchema = z.object({
-  name: z.string().min(1, "Filename is required"),
-  description: z.string().optional(),
-});
 
 export default function CreateFilePage() {
   const navigate = useNavigate();
@@ -98,7 +91,7 @@ export default function CreateFilePage() {
           setIsUploading(false);
           return 100;
         }
-        return prev + 5;
+        return prev + 10;
       });
     }, 300);
 
@@ -127,18 +120,13 @@ export default function CreateFilePage() {
 
     // If there are no errors, proceed with upload
     if (Object.keys(newErrors).length === 0) {
-      // In a real app, you would upload the file to your server
-      console.log("Uploading file:", file);
-      console.log("Name:", name);
-      console.log("Description:", description);
-
       // Simulate upload
       simulateUpload();
 
       const formData = new FormData();
       formData.append("file0", file);
-      axios
-        .post("http://localhost:5150/api/files", formData, {
+      client
+        .post("/files", formData, {
           params: {
             description: description,
           },

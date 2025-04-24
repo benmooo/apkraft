@@ -1,6 +1,8 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 
-export const baseUrl = "http://localhost:5150/api";
+// check if env is production
+export const baseUrl =
+  process.env.NODE_ENV === "production" ? "/api" : "http://localhost:5150/api";
 
 // Create a custom axios instance
 const client: AxiosInstance = axios.create({

@@ -69,19 +69,19 @@ export default function FilesTable() {
   const { data, isError, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["files", pageIndex, pageSize, searchTerm, mimeFilter],
     queryFn: async () => {
-      const params: Record<string, any> = { 
-        page: pageIndex + 1, 
+      const params: Record<string, any> = {
+        page: pageIndex + 1,
         page_size: pageSize,
       };
-      
+
       if (searchTerm.trim()) {
         params.name = searchTerm.trim();
       }
-      
+
       if (mimeFilter && mimeFilter !== "-") {
         params.mime = mimeFilter;
       }
-      
+
       const response = await client.get("/files", { params });
       return response.data as PagedResponse<Models.File>;
     },
@@ -132,7 +132,7 @@ export default function FilesTable() {
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Files</h1>
-        <Button onClick={() => navigate("/admin/files/upload")} size="sm">
+        <Button onClick={() => navigate("/admin/files/create")} size="sm">
           <PlusIcon className="h-4 w-4 mr-2" />
           Upload File
         </Button>

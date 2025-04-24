@@ -1,0 +1,66 @@
+# Production configuration file
+
+# Application logging configuration
+logger:
+  enable: true
+  pretty_backtrace: false
+  level: info
+  format: json
+
+# Web server configuration
+server:
+  port: { { get_env(name="PORT", default="3000") } }
+  binding: 0.0.0.0
+  host: { { get_env(name="HOST_URL", default="http://localhost") } }
+  middlewares:
+    cors:
+      enable: true
+    fallback:
+      enable: false
+    static:
+      enable: true
+      must_exist: true
+      precompressed: false
+      folder:
+        uri: "/"
+        path: "frontend/dist"
+      fallback: "frontend/dist/index.html"
+
+# Worker Configuration
+workers:
+  mode: BackgroundAsync
+
+# Mailer Configuration
+mailer:
+  smtp:
+    enable: true
+    host: { { get_env(name="SMTP_HOST", default="smtp") } }
+    port: { { get_env(name="SMTP_PORT", default="1025") } }
+    secure: { { get_env(name="SMTP_SECURE", default="false") } }
+    auth:
+      user: { { get_env(name="SMTP_USER", default="") } }
+      password: { { get_env(name="SMTP_PASSWORD", default="") } }
+
+# Database Configuration
+database:
+  uri:
+    {
+      {
+        get_env(name="DATABASE_URL",
+        default="postgres://loco:loco@127.0.0.1:5432/apkraft_production"),
+      },
+    }
+  enable_logging: false
+  connect_timeout: { { get_env(name="DB_CONNECT_TIMEOUT", default="500") } }
+  idle_timeout: { { get_env(name="DB_IDLE_TIMEOUT", default="500") } }
+  min_connections: { { get_env(name="DB_MIN_CONNECTIONS", default="5") } }
+  max_connections: { { get_env(name="DB_MAX_CONNECTIONS", default="10") } }
+  auto_migrate: true
+  dangerously_truncate: false
+  dangerously_recreate: false
+
+# Authentication Configuration
+auth:
+  jwt:
+    secret: { { get_env(name="JWT_SECRET", default="3hprVIUfUtHssVsyy3qp") } }
+    expiration: { { get_env(name="JWT_EXPIRATION", default="604800") } } # 7 days
