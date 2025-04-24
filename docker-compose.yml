@@ -7,14 +7,13 @@ services:
     environment:
       POSTGRES_USER: loco
       POSTGRES_PASSWORD: loco
-      POSTGRES_DB: apkraft_production
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   api:
     image: crpi-wcfdnsi88pmwqij1.cn-hangzhou.personal.cr.aliyuncs.com/akatsukii/apkraft-cli:latest
     ports:
-      - "80:3000" # Example API port
+      - "80:3000"
     environment:
       DATABASE_URL: "postgres://loco:loco@postgres:5432/apkraft_production"
     depends_on:
