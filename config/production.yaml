@@ -43,7 +43,7 @@ mailer:
 
 # Database Configuration
 database:
-  uri: {{ get_env(name="DATABASE_URL", default="postgres://loco:loco@47.96.141.100:5432/apkraft_production") }}
+  uri: {{ get_env(name="DATABASE_URL", default="postgres://loco:loco@localhost:5432/apkraft_production") }}
   enable_logging: false
   connect_timeout: {{ get_env(name="DB_CONNECT_TIMEOUT", default="500") }}
   idle_timeout: {{ get_env(name="DB_IDLE_TIMEOUT", default="500") }}
