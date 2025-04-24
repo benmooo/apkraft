@@ -10,3 +10,6 @@ push-docker-image:
 
 pull-docker-image:
     docker pull crpi-wcfdnsi88pmwqij1.cn-hangzhou.personal.cr.aliyuncs.com/akatsukii/apkraft-cli:latest
+
+run-docker-image:
+    docker run -d -p 80:3000  apkraft-cli-image
