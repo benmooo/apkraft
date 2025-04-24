@@ -14,3 +14,6 @@ pull-docker-image:
 
 run-docker-image:
     docker run -d -p 80:3000  {{tag}}
+
+up:
+    docker-compose up -d
