@@ -12,7 +12,6 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import axios from "axios";
 import client from "@/lib/client";
 
 const supportedFileTypes = ["apk", "jpg", "jpeg", "png", "svg", "webp"];
