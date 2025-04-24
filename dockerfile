@@ -3,7 +3,7 @@ FROM rust:1.83.0-slim AS builder
 WORKDIR /usr/src/
 
 COPY . .
-
+RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
 RUN apt-get update && apt-get install -y curl
 
 # Install Bun.js instead of Node.js
@@ -19,6 +19,7 @@ FROM debian:bookworm-slim
 WORKDIR /usr/app
 
 # Install necessary runtime dependencies
+RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
 RUN apt-get update && apt-get install -y ca-certificates
 
 COPY --from=builder /usr/src/frontend/dist frontend/dist
