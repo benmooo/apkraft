@@ -4,6 +4,8 @@ WORKDIR /usr/src/
 
 COPY . .
 
+RUN apt-get update && apt-get install -y curl
+
 # Install Bun.js instead of Node.js
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/root/.bun/bin:${PATH}"
