@@ -1,15 +1,16 @@
+tag:="crpi-wcfdnsi88pmwqij1.cn-hangzhou.personal.cr.aliyuncs.com/akatsukii/apkraft-cli"
 
 build-docker-image:
     docker build -t apkraft-cli-image .
 
 tag:
-    docker tag apkraft-cli-image crpi-wcfdnsi88pmwqij1.cn-hangzhou.personal.cr.aliyuncs.com/akatsukii/apkraft-cli:latest
+    docker tag apkraft-cli-image {{tag}}:latest
 
 push-docker-image:
-    docker push crpi-wcfdnsi88pmwqij1.cn-hangzhou.personal.cr.aliyuncs.com/akatsukii/apkraft-cli:latest
+    docker push {{tag}}:latest
 
 pull-docker-image:
-    docker pull crpi-wcfdnsi88pmwqij1.cn-hangzhou.personal.cr.aliyuncs.com/akatsukii/apkraft-cli:latest
+    docker pull {{tag}}:latest
 
 run-docker-image:
-    docker run -d -p 80:3000  apkraft-cli-image
+    docker run -d -p 80:3000  {{tag}}
