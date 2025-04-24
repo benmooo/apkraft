@@ -7,6 +7,7 @@ services:
     environment:
       POSTGRES_USER: loco
       POSTGRES_PASSWORD: loco
+      POSTGRES_DB: apkraft_production
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
