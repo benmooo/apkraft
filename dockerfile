@@ -7,7 +7,7 @@ RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list.d/debi
 RUN apt-get update && apt-get install -y curl unzip
 
 # Install Bun.js instead of Node.js
-RUN curl -fsSL https://bun.sh/install | bash
+RUN curl -fsSL https://gitee.com/akirarika/bun-cn/raw/main/install.sh | bash
 ENV PATH="/root/.bun/bin:${PATH}"
 
 # Use Bun to install dependencies and build the frontend
