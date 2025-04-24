@@ -31,4 +31,5 @@ COPY --from=builder /usr/src/target/release/apkraft-cli apkraft-cli
 ENV RUST_LOG=info
 
 # Start the API server and serve the frontend
-CMD ["/usr/app/apkraft-cli", "start", "--environment", "production"]
+ENTRYPOINT ["/usr/app/apkraft-cli"]
+CMD ["start", "--environment", "production"]
