@@ -4,7 +4,7 @@
 use axum::{
     body::Body,
     debug_handler,
-    extract::{Multipart, Query},
+    extract::{DefaultBodyLimit, Multipart, Query},
     http::{header, StatusCode},
 };
 use loco_rs::prelude::*;
@@ -138,7 +138,9 @@ pub fn routes() -> Routes {
     Routes::new()
         .prefix("api/files/")
         .add("/", get(list))
+        // set max body limit to 200 mb
         .add("/", post(add))
+        .layer(DefaultBodyLimit::max(200 * 1024 * 1024))
         .add("{id}", get(get_one))
         .add("{id}", delete(remove))
         .add("{id}", put(update))
