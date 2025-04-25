@@ -19,10 +19,6 @@ services:
     depends_on:
       - postgres
     restart: on-failure
-    restart_policy:
-      delay: 10s
-      max_attempts: 5
-      window: 60s
 
 volumes:
   postgres_data:
