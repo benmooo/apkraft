@@ -1,7 +1,6 @@
-version: "3.8"
 services:
   postgres:
-    image: postgres:15.3-alpine
+    image: postgres:17-alpine
     ports:
       - "5432:5432"
     environment:
@@ -11,7 +10,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  api:
+  web:
     image: crpi-wcfdnsi88pmwqij1.cn-hangzhou.personal.cr.aliyuncs.com/akatsukii/apkraft-cli:latest
     ports:
       - "80:3000"
@@ -19,6 +18,11 @@ services:
       DATABASE_URL: "postgres://loco:loco@postgres:5432/apkraft_production"
     depends_on:
       - postgres
+    restart: on-failure
+    restart_policy:
+      delay: 10s
+      max_attempts: 5
+      window: 60s
 
 volumes:
   postgres_data:
