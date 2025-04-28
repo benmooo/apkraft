@@ -19,6 +19,9 @@ services:
     depends_on:
       - postgres
     restart: on-failure
+    volumes:
+      - uploaded_files:/usr/app/static/uploads
 
 volumes:
   postgres_data:
+  uploaded_files:
