@@ -29,6 +29,10 @@ export const routes: RouteObject[] = [
         Component: Apps,
       },
       {
+        path: "apps/:id",
+        Component: React.lazy(() => import("@/pages/admin/app-detail")),
+      },
+      {
         path: "apps/create",
         Component: React.lazy(() => import("@/pages/admin/create-app")),
       },
