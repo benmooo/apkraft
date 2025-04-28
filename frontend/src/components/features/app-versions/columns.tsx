@@ -17,7 +17,7 @@ import {
   Trash2Icon,
   Unlink,
 } from "lucide-react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { AppVersion } from "@/schemas";
 import { downloadFile } from "@/lib/utils";
 import { useDeleteAppVersion } from "@/hooks/use-delete-app-version";
@@ -155,11 +155,10 @@ export const appVersionColumns: ColumnDef<AppVersion>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onClick={() => navigate(`/admin/app-versions/${version.id}`)}
-            >
-              View Details
-            </DropdownMenuItem>
+            <Link to={`/admin/app-versions/${version.id}`}>
+              <DropdownMenuItem>View Details</DropdownMenuItem>
+            </Link>
+
             <DropdownMenuItem
               onClick={() => navigate(`/admin/app-versions/${version.id}/edit`)}
             >

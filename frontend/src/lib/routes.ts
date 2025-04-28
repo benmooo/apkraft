@@ -5,8 +5,9 @@ import { adminPrefix } from "@/lib/config";
 import { RouterErrorBoundary } from "@/components/features/router-error-boundary";
 import Admin from "@/pages/admin/admin";
 import React from "react";
+import { RouteObject } from "react-router";
 
-export const routes = [
+export const routes: RouteObject[] = [
   {
     path: "/",
     Component: LandingPage,
@@ -34,6 +35,10 @@ export const routes = [
       {
         path: "app-versions",
         Component: React.lazy(() => import("@/pages/admin/app-versions")),
+      },
+      {
+        path: "app-versions/:id",
+        Component: React.lazy(() => import("@/pages/admin/app-version-detail")),
       },
       {
         path: "app-versions/create",
