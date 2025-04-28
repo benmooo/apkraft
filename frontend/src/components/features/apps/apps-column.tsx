@@ -15,7 +15,7 @@ import { App } from "@/schemas";
 import { useMutation } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { DeleteIcon, MoreVerticalIcon } from "lucide-react";
+import { DeleteIcon, EditIcon, InfoIcon, MoreVerticalIcon } from "lucide-react";
 import { Link } from "react-router";
 import { toast } from "sonner";
 
@@ -161,11 +161,17 @@ export const appColumns: ColumnDef<App>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[160px]">
             <Link to={`/admin/apps/${app.id}`}>
-              <DropdownMenuItem>View Details</DropdownMenuItem>
+              <DropdownMenuItem>
+                <InfoIcon />
+                View Details
+              </DropdownMenuItem>
             </Link>
 
             <Link to={`/admin/apps/${app.id}/edit`}>
-              <DropdownMenuItem>Edit</DropdownMenuItem>
+              <DropdownMenuItem>
+                <EditIcon />
+                Edit
+              </DropdownMenuItem>
             </Link>
 
             <DropdownMenuSeparator />

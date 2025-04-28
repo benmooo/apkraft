@@ -12,7 +12,9 @@ import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import {
   DownloadIcon,
+  EditIcon,
   ExternalLinkIcon,
+  InfoIcon,
   MoreVerticalIcon,
   Trash2Icon,
   Unlink,
@@ -156,25 +158,26 @@ export const appVersionColumns: ColumnDef<AppVersion>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <Link to={`/admin/app-versions/${version.id}`}>
-              <DropdownMenuItem>View Details</DropdownMenuItem>
+              <DropdownMenuItem>
+                <InfoIcon></InfoIcon>
+                View Details
+              </DropdownMenuItem>
             </Link>
 
-            <DropdownMenuItem
-              onClick={() => navigate(`/admin/app-versions/${version.id}/edit`)}
-            >
-              Edit
-            </DropdownMenuItem>
+            <Link to={`/admin/app-versions/${version.id}/edit`}>
+              <DropdownMenuItem>
+                <EditIcon></EditIcon>
+                Edit
+              </DropdownMenuItem>
+            </Link>
+
             <DropdownMenuItem onClick={() => downloadFile(version.apk_file_id)}>
-              <DownloadIcon className="mr-2 h-4 w-4" />
+              <DownloadIcon />
               Download APK
             </DropdownMenuItem>
             {
               <DropdownMenuItem onClick={onPublish}>
-                {version.published_at ? (
-                  <Unlink className="mr-2 h-4 w-4" />
-                ) : (
-                  <ExternalLinkIcon className="mr-2 h-4 w-4" />
-                )}
+                {version.published_at ? <Unlink /> : <ExternalLinkIcon />}
                 {version.published_at ? "Unpublish" : "Publish"}
               </DropdownMenuItem>
             }
