@@ -19,7 +19,7 @@ import {
   Trash2Icon,
   Unlink,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { AppVersion } from "@/schemas";
 import { downloadFile } from "@/lib/utils";
 import { useDeleteAppVersion } from "@/hooks/use-delete-app-version";
@@ -130,7 +130,6 @@ export const appVersionColumns: ColumnDef<AppVersion>[] = [
     id: "actions",
     cell: ({ row }) => {
       const version = row.original;
-      const navigate = useNavigate();
 
       const deleteAppVersion = useDeleteAppVersion(version.id);
       const onDelete = () => {
