@@ -15,6 +15,10 @@ export const routes: RouteObject[] = [
     ErrorBoundary: RouterErrorBoundary,
   },
   {
+    path: "/login",
+    Component: React.lazy(() => import("@/pages/admin/login")),
+  },
+  {
     path: adminPrefix,
     Component: AdminLayout,
     // Add error boundary to admin layout route

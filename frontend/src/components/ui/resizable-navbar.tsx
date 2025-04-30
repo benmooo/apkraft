@@ -9,7 +9,7 @@ import {
 } from "motion/react";
 import React, { useRef, useState } from "react";
 import { Link } from "react-router";
-import { ApkraftLogo } from "./apkraft-logo";
+import { ApkraftLogo } from "../features/apkraft-logo";
 
 interface NavbarProps {
   children: React.ReactNode;
@@ -195,7 +195,7 @@ export const MobileNavMenu = ({
   children,
   className,
   isOpen,
-  onClose,
+  // onClose,
 }: MobileNavMenuProps) => {
   return (
     <AnimatePresence>

@@ -14,7 +14,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { adminPrefix, appName, palette } from "@/lib/config";
-import { ApkraftLogo } from "../ui/apkraft-logo";
+import { ApkraftLogo } from "./apkraft-logo";
 import { navItems, withPrefix } from "@/lib/nav-items";
 import { useMatch } from "react-router";
 import logo from "@/assets/apkraft_logo.png";
