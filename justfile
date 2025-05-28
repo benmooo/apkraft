@@ -1,6 +1,9 @@
 tag:="crpi-wcfdnsi88pmwqij1.cn-hangzhou.personal.cr.aliyuncs.com/akatsukii/apkraft-cli"
 node0:="47.96.141.100"
 
+start:
+    cargo loco start
+
 build-docker-image:
     docker build -t apkraft-cli-image .
 
